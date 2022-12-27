@@ -1,8 +1,8 @@
 ; Registers:
-;	R2:3	Pointer used when R10 == xxxx x01x - Input buffer read ptr
-;	R4:5	Pointer used when R10 == xxxx x00x - Input buffer write ptr
-;	R6:7	Pointer used when R10 == xxxx x11x - Output buffer read ptr
-;	R8:9	Pointer used when R10 == xxxx x10x - Output buffer write ptr
+;	R2:3	Input buffer read ptr
+;	R4:5	Input buffer write ptr
+;	R6:7	Output buffer read ptr
+;	R8:9	Output buffer write ptr
 ;	R10	Flags
 ;		7 (80)	0=serial mode - 1=parallel mode
 ;		6 (40)	0=read input using R2:3 - 1=read input using R16:17
@@ -40,7 +40,7 @@
 ;	R42:43	Output buffer start = Input buffer end + 1
 ;	R44:45
 ;	R46:47	Parallel input address
-;	R50	Output buffer high water mark ?
+;	R50	Output buffer high water mark
 ;		$DF=223 in external RAM mode - $01 in internal RAM mode
 ;	R51:52	Input buffer free size
 ;	R53	Output buffer free size
