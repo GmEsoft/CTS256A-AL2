@@ -398,7 +398,7 @@ RWBUFR	BTJO	%>02,R10,RDBUF	; R10.1 set ? Jump if yes (read from either buffer)
 	BTJO	%>04,R10,WROBUF	; R10.2 set ? Jump if yes (output buffer)
 	MOVD	R5,R13		; R12:13 := R4:5 input buffer write ptr
 	DECD	R52		; Decrement # of free input buffer bytes
-	JMP	LF2AC		; Store A in buffer
+	JMP	WRBUF		; Store A in buffer
 
 WROBUF	MOVD	R9,R13		; R12:13 := R8:9 output buffer write ptr
 	DECD	R54		; Decr output buffer free size
