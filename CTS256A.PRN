@@ -1,0 +1,1312 @@
+;** TMS-7000(tm) DISASSEMBLER V1.10beta3 - (c) 2015-20 GmEsoft, All rights reserved. **
+;
+;	Tue Dec 27 12:49:36 2022
+;
+;	Disassembly of : CTS256A.BIN
+;	Equates file   : CTS256A.EQU
+;	Screening file : CTS256A.SCR
+
+
+
+F000         		AORG	>F000
+			; Main entry point
+F000 523A    	START	MOV     %>3A,B                                  R:
+F002 0D      		LDSP                                            .
+F003 8820002D		MOVD    %>2000,R45                              ...-
+F007 A2AA00  		MOVP    %>AA,P0                                 ...
+F00A A20A10  		MOVP    %>0A,P16                                ...
+F00D 9104    		MOVP    P4,B                                    ..
+F00F 5307    		AND     %>07,B                                  S.
+F011 5D00    		CMP     %>00,B                                  ].
+F013 E239    		JZ      PARALL          ; Start in parallel mode.9
+F015 737F0A  		AND     %>7F,R10                                s..
+F018 8004    		MOVP    P4,A                                    ..
+F01A 2308    		AND     %>08,A                                  #.
+F01C 2D00    		CMP     %>00,A                                  -.
+F01E E207    		JZ      SER7N2          ; P17 = SMODE := Fixed S..
+F020 8A1000  		LDA     @>1000                                  ...
+F023 8211    		MOVP    A,P17                                   ..
+F025 E003    		JMP     SERSEL          ; Serial selectable conf..
+
+			; P17 = SMODE := Fixed Serial 7N2 config
+F027 A2CB11  	SER7N2	MOVP    %>CB,P17                                ...
+			; Serial selectable config
+F02A A21511  	SERSEL	MOVP    %>15,P17                                ...
+F02D AAF03E  		LDA     @SCT1TB(B)      ; Table of values for SC..>
+F030 B8      		PUSH    A                                       .
+F031 AAF046  		LDA     @T3DATB(B)      ; Table of timer3 reload..F
+F034 C9      		POP     B                                       .
+F035 9215    		MOVP    B,P21                                   ..
+F037 8214    		MOVP    A,P20                                   ..
+F039 A40110  		ORP     %>01,P16                                ...
+F03C E01A    		JMP     INIRAM          ; Init RAM config       ..
+
+			; Table of values for SCTL1
+F03E         	SCT1TB	BYTE	>FF,>40,>43,>40,>43,>40,>40,>40
+			; Table of timer3 reload values T3DATA
+F046         	T3DATB	BYTE	>FF,>20,>57,>07,>C2,>0F,>81,>03
+
+			; Start in parallel mode
+F04E 74800A  	PARALL	OR      %>80,R10                                t..
+F051 8802002F		MOVD    %>0200,R47                              .../
+F055 A43000  		ORP     %>30,P0                                 .0.
+			; Init RAM config
+F058 9104    	INIRAM	MOVP    P4,B                                    ..
+F05A 5310    		AND     %>10,B                                  S.
+F05C 5D00    		CMP     %>00,B                                  ].
+F05E E259    		JZ      INTRAM          ; init internal RAM poin.Y
+F060 88300003		MOVD    %>3000,R3                               .0..
+F064 980329  		MOVD    R3,R41                                  ..)
+F067 D802    		PUSH    R2                                      ..
+F069 D202    		DEC     R2                                      ..
+F06B 420222  		MOV     R2,R34                                  B."
+F06E 72FF23  		MOV     %>FF,R35                                r.#
+F071 780202  		ADD     %>02,R2                                 x..
+F074 D517    		CLR     R23                                     ..
+F076 D302    	LF076	INC     R2                                      ..
+F078 7DF002  		CMP     %>F0,R2                                 }..
+F07B E21E    		JZ      LF09B                                   ..
+F07D D317    		INC     R23                                     ..
+F07F 7D1017  		CMP     %>10,R23                                }..
+F082 E217    		JZ      LF09B                                   ..
+F084 225A    		MOV     %>5A,A                                  "Z
+F086 9B03    		STA     *R3                                     ..
+F088 B5      		CLR     A                                       .
+F089 9A03    		LDA     *R3                                     ..
+F08B 2D5A    		CMP     %>5A,A                                  -Z
+F08D E60C    		JNZ     LF09B                                   ..
+F08F B7      		SWAP    A                                       .
+F090 9B03    		STA     *R3                                     ..
+F092 B5      		CLR     A                                       .
+F093 9A03    		LDA     *R3                                     ..
+F095 2DA5    		CMP     %>A5,A                                  -.
+F097 E602    		JNZ     LF09B                                   ..
+F099 E0DB    		JMP     LF076                                   ..
+
+F09B 420226  	LF09B	MOV     R2,R38                                  B.&
+F09E D527    		CLR     R39                                     .'
+F0A0 7A0102  		SUB     %>01,R2                                 z..
+F0A3 980307  		MOVD    R3,R7                                   ...
+F0A6 98072B  		MOVD    R7,R43                                  ..+
+F0A9 7A0102  		SUB     %>01,R2                                 z..
+F0AC 420224  		MOV     R2,R36                                  B.$
+F0AF 72FF25  		MOV     %>FF,R37                                r.%
+F0B2 D902    		POP     R2                                      ..
+F0B4 72DF32  		MOV     %>DF,R50                                r.2
+F0B7 E01D    		JMP     INIROM          ; Init EPROM            ..
+
+			; init internal RAM pointers
+F0B9 88005129	INTRAM	MOVD    %>0051,R41                              ..Q)
+F0BD 88006525		MOVD    %>0065,R37                              ..e%
+F0C1 88005023		MOVD    %>0050,R35                              ..P#
+F0C5 8800662B		MOVD    %>0066,R43                              ..f+
+F0C9 88008027		MOVD    %>0080,R39                              ...'
+F0CD 982903  		MOVD    R41,R3                                  .).
+F0D0 982B07  		MOVD    R43,R7                                  .+.
+F0D3 720132  		MOV     %>01,R50                                r.2
+			; Init EPROM
+F0D6 88000013	INIROM	MOVD    %>0000,R19                              ....
+F0DA C5      	LF0DA	CLR     B                                       .
+F0DB 781012  		ADD     %>10,R18                                x..
+F0DE 7DF012  		CMP     %>F0,R18                                }..
+F0E1 E217    		JZ      INITOK          ; Done peripherals init ..
+F0E3 9A13    	LF0E3	LDA     *R19                                    ..
+F0E5 ADF526  		CMPA    @LTFLGS(B)      ; Letter flags          ..&
+F0E8 E6F0    		JNZ     LF0DA                                   ..
+F0EA C3      		INC     B                                       .
+F0EB 5D05    		CMP     %>05,B                                  ].
+F0ED E204    		JZ      STAROM          ; Boot in EPROM         ..
+F0EF D313    		INC     R19                                     ..
+F0F1 E0F0    		JMP     LF0E3                                   ..
+
+			; Boot in EPROM
+F0F3 D313    	STAROM	INC     R19                                     ..
+F0F5 981331  		MOVD    R19,R49                                 ..1
+F0F8 9C31    		BR      *R49                                    .1
+
+			; Done peripherals init
+F0FA 720030  	INITOK	MOV     %>00,R48                                r.0
+F0FD 8EF143  		CALL    @INIPTR         ; Init buffer pointers a..C
+F100 8EF1AC  		CALL    @SAYOK          ; Say O.K.              ...
+F103 E00B    		JMP     LF110                                   ..
+
+			; Polling loop
+F105 76010B07	POLL	BTJO    %>01,R11,LF110                          v...
+F109 73EF0B  		AND     %>EF,R11                                s..
+			; Idle loop (wait interrupt?)
+F10C 77100BFC	WTIDLE	BTJZ    %>10,R11,WTIDLE ; Idle loop (wait interrw...
+F110 4D0305  	LF110	CMP     R3,R5                                   M..
+F113 E607    		JNZ     ENDPOL          ; Exit polling loop     ..
+F115 4D0204  		CMP     R2,R4                                   M..
+F118 E602    		JNZ     ENDPOL          ; Exit polling loop     ..
+F11A E0E9    		JMP     POLL            ; Polling loop          ..
+
+			; Exit polling loop
+F11C 7D0038  	ENDPOL	CMP     %>00,R56                                }.8
+F11F E605    		JNZ     LF126                                   ..
+F121 7D0039  		CMP     %>00,R57                                }.9
+F124 E2F6    		JZ      ENDPOL          ; Exit polling loop     ..
+F126 77080B09	LF126	BTJZ    %>08,R11,LF133                          w...
+F12A 7D0132  		CMP     %>01,R50                                }.2
+F12D E211    		JZ      CLBUF1                                  ..
+			; wait reset of bit 3 of R11
+F12F 76080BFC	W11B3	BTJO    %>08,R11,W11B3  ; wait reset of bit 3 ofv...
+F133 8EF3E7  	LF133	CALL    @ENCODE         ; Encode text to allopho...
+F136 4D0709  		CMP     R7,R9                                   M..
+F139 E2D5    		JZ      LF110                                   ..
+F13B A40100  		ORP     %>01,P0                                 ...
+F13E E0D0    		JMP     LF110                                   ..
+
+F140 8CF1F0  	CLBUF1	BR      @CLBUF          ; clear buffers - reinit...
+
+			; Init buffer pointers and regs
+F143 73000B  	INIPTR	AND     %>00,R11                                s..
+F146 D537    		CLR     R55                                     .7
+F148 D538    		CLR     R56                                     .8
+F14A D539    		CLR     R57                                     .9
+F14C A40106  		ORP     %>01,P6                                 ...
+F14F 982903  		MOVD    R41,R3                                  .).
+F152 982B07  		MOVD    R43,R7                                  .+.
+F155 2220    		MOV     %>20,A                                  ".
+F157 9B03    		STA     *R3                                     ..
+F159 8EF72B  		CALL    @INCR3          ; inc R2:3 and roll if n..+
+F15C 980305  		MOVD    R3,R5                                   ...
+F15F D803    		PUSH    R3                                      ..
+F161 D807    		PUSH    R7                                      ..
+F163 D806    		PUSH    R6                                      ..
+F165 D203    		DEC     R3                                      ..
+F167 4A0307  		SUB     R3,R7                                   J..
+F16A 4B0206  		SBB     R2,R6                                   K..
+F16D 980734  		MOVD    R7,R52                                  ..4
+F170 DB34    		DECD    R52                                     .4
+F172 B0      		TSTA                                            .
+F173 DD06    		RRC     R6                                      ..
+F175 DD07    		RRC     R7                                      ..
+F177 98071F  		MOVD    R7,R31                                  ...
+F17A DD06    		RRC     R6                                      ..
+F17C DD07    		RRC     R7                                      ..
+F17E B0      		TSTA                                            .
+F17F DD06    		RRC     R6                                      ..
+F181 DD07    		RRC     R7                                      ..
+F183 980721  		MOVD    R7,R33                                  ..!
+F186 D906    		POP     R6                                      ..
+F188 D907    		POP     R7                                      ..
+F18A D903    		POP     R3                                      ..
+F18C 980709  		MOVD    R7,R9                                   ...
+F18F 980319  		MOVD    R3,R25                                  ...
+F192 982736  		MOVD    R39,R54                                 .'6
+F195 4A2B36  		SUB     R43,R54                                 J+6
+F198 4B2A35  		SBB     R42,R53                                 K*5
+F19B 9104    		MOVP    P4,B                                    ..
+F19D 5380    		AND     %>80,B                                  S.
+F19F 5D00    		CMP     %>00,B                                  ].
+F1A1 E203    		JZ      LF1A6                                   ..
+F1A3 74010B  		OR      %>01,R11                                t..
+F1A6 05      	LF1A6	EINT                                            .
+F1A7 0A      		RETS                                            .
+
+			; "O-K\n"
+F1A8         	STROK	TEXT	'O-K'
+F1AB         		BYTE	>0D
+
+			; Say O.K.
+F1AC 73F90A  	SAYOK	AND     %>F9,R10                                s..
+F1AF C5      		CLR     B                                       .
+F1B0 AAF1A8  	LF1B0	LDA     @STROK(B)       ; "O-K\n"               ...
+F1B3 8EF1E2  		CALL    @STINPB         ; Store char in input bu...
+F1B6 C3      		INC     B                                       .
+F1B7 5D04    		CMP     %>04,B                                  ].
+F1B9 E6F5    		JNZ     LF1B0                                   ..
+F1BB 0A      		RETS                                            .
+
+			; INT4 handler (serial interrupt)
+F1BC A6021101	INT4	BTJOP   %>02,P17,INT3   ; INT3 handler (parallel....
+F1C0 0B      		RETI                                            .
+
+			; INT3 handler (parallel interrupt)
+F1C1 B8      	INT3	PUSH    A                                       .
+F1C2 76800A0B		BTJO    %>80,R10,LF1D1                          v...
+F1C6 A3FE10  		ANDP    %>FE,P16                                ...
+			; wait RXBUF ready with new character
+F1C9 A70211FC	WRXRDY	BTJZP   %>02,P17,WRXRDY ; wait RXBUF ready with ....
+F1CD 8016    		MOVP    P22,A                                   ..
+F1CF E005    		JMP     LF1D6                                   ..
+
+F1D1 A3EF00  	LF1D1	ANDP    %>EF,P0                                 ...
+F1D4 9A2F    		LDA     *R47                                    ./
+F1D6 8EF1E2  	LF1D6	CALL    @STINPB         ; Store char in input bu...
+F1D9 B9      		POP     A                                       .
+F1DA 76200B03		BTJO    %>20,R11,LF1E1                          v...
+F1DE 8EF28C  		CALL    @ENINT          ; enable parallel or ser...
+F1E1 0B      	LF1E1	RETI                                            .
+
+			; Store char in input buffer
+F1E2 C8      	STINPB	PUSH    B                                       .
+F1E3 D80A    		PUSH    R10                                     ..
+F1E5 D80C    		PUSH    R12                                     ..
+F1E7 D80D    		PUSH    R13                                     ..
+F1E9 73F90A  		AND     %>F9,R10                                s..
+F1EC 2D1B    		CMP     %>1B,A                                  -.
+F1EE E614    		JNZ     NOTESC          ; Not <ESC>             ..
+			; clear buffers - reinit
+F1F0 A3FE00  	CLBUF	ANDP    %>FE,P0                                 ...
+F1F3 8EF143  		CALL    @INIPTR         ; Init buffer pointers a..C
+F1F6 523A    		MOV     %>3A,B                                  R:
+F1F8 0D      		LDSP                                            .
+F1F9 982D1B  		MOVD    R45,R27                                 .-.
+F1FC 9B1B    		STA     *R27                                    ..
+F1FE 8EF28C  		CALL    @ENINT          ; enable parallel or ser...
+F201 8CF105  		BR      @POLL           ; Polling loop          ...
+
+			; Not <ESC>
+F204 2D12    	NOTESC	CMP     %>12,A                                  -.
+F206 E619    		JNZ     NOTCTR          ; Not <Ctrl-R>          ..
+F208 76010B12		BTJO    %>01,R11,LF21E                          v...
+F20C 4A1903  		SUB     R25,R3                                  J..
+F20F 4B1802  		SBB     R24,R2                                  K..
+F212 4A0334  		SUB     R3,R52                                  J.4
+F215 4B0233  		SBB     R2,R51                                  K.3
+F218 981903  		MOVD    R25,R3                                  ...
+F21B 720139  		MOV     %>01,R57                                r.9
+F21E 8CF284  	LF21E	BR      @XSTINP         ; exit handler          ...
+
+			; Not <Ctrl-R>
+F221 2D08    	NOTCTR	CMP     %>08,A                                  -.
+F223 E623    		JNZ     NOTBKS          ; Not <BkSp>            .#
+F225 4D0204  		CMP     R2,R4                                   M..
+F228 E605    		JNZ     LF22F                                   ..
+F22A 4D0305  		CMP     R3,R5                                   M..
+F22D E255    		JZ      XSTINP          ; exit handler          .U
+F22F D803    	LF22F	PUSH    R3                                      ..
+F231 D802    		PUSH    R2                                      ..
+F233 980503  		MOVD    R5,R3                                   ...
+F236 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F239 980305  		MOVD    R3,R5                                   ...
+F23C D902    		POP     R2                                      ..
+F23E D903    		POP     R3                                      ..
+F240 D334    		INC     R52                                     .4
+F242 E740    		JNC     XSTINP          ; exit handler          .@
+F244 D333    		INC     R51                                     .3
+F246 E03C    		JMP     XSTINP          ; exit handler          .<
+
+			; Not <BkSp>
+F248 2D27    	NOTBKS	CMP     %>27,A                                  -'
+F24A E226    		JZ      STOCHR          ; put char in buffer    .&
+F24C 2D7B    		CMP     %>7B,A                                  -{
+F24E E40C    		JP      DELIMT          ; Delimiter (not letter/..
+F250 2D30    		CMP     %>30,A                                  -0
+F252 E108    		JN      DELIMT          ; Delimiter (not letter/..
+F254 2D3A    		CMP     %>3A,A                                  -:
+F256 E11A    		JN      STOCHR          ; put char in buffer    ..
+F258 2D41    		CMP     %>41,A                                  -A
+F25A E516    		JPZ     STOCHR          ; put char in buffer    ..
+			; Delimiter (not letter/digit/')
+F25C 76010B07	DELIMT	BTJO    %>01,R11,LF267                          v...
+F260 2D0D    		CMP     %>0D,A                                  -.
+F262 E606    		JNZ     LF26A                                   ..
+F264 74100B  		OR      %>10,R11                                t..
+F267 980319  	LF267	MOVD    R3,R25                                  ...
+F26A 2480    	LF26A	OR      %>80,A                                  $.
+F26C D339    		INC     R57                                     .9
+F26E E702    		JNC     STOCHR          ; put char in buffer    ..
+F270 D338    		INC     R56                                     .8
+			; put char in buffer
+F272 8EF298  	STOCHR	CALL    @RWBUFR         ; read/write in input/ou...
+F275 77200B0B		BTJZ    %>20,R11,XSTINP ; exit handler          w...
+F279 228D    		MOV     %>8D,A                                  ".
+F27B D339    		INC     R57                                     .9
+F27D E702    		JNC     LF281                                   ..
+F27F D338    		INC     R56                                     .8
+F281 8EF298  	LF281	CALL    @RWBUFR         ; read/write in input/ou...
+			; exit handler
+F284 D90D    	XSTINP	POP     R13                                     ..
+F286 D90C    		POP     R12                                     ..
+F288 D90A    		POP     R10                                     ..
+F28A C9      		POP     B                                       .
+F28B 0A      		RETS                                            .
+
+			; enable parallel or serial interrupt
+F28C 77800A04	ENINT	BTJZ    %>80,R10,ENINT4 ; enable INT4           w...
+F290 A41000  		ORP     %>10,P0                                 ...
+F293 0A      		RETS                                            .
+
+			; enable INT4
+F294 A40110  	ENINT4	ORP     %>01,P16                                ...
+F297 0A      		RETS                                            .
+
+			; read/write in input/output buffer
+F298 76020A2E	RWBUFR	BTJO    %>02,R10,RDBUF  ; read from input or outv...
+F29C 76040A07		BTJO    %>04,R10,WROBUF ; Write to output bufferv...
+F2A0 98050D  		MOVD    R5,R13                                  ...
+F2A3 DB34    		DECD    R52                                     .4
+F2A5 E005    		JMP     WRBUF                                   ..
+
+			; Write to output buffer
+F2A7 98090D  	WROBUF	MOVD    R9,R13                                  ...
+F2AA DB36    		DECD    R54                                     .6
+F2AC 9B0D    	WRBUF	STA     *R13                                    ..
+F2AE 8A000D  		LDA     @>000D                                  ...
+F2B1 78010D  		ADD     %>01,R13                                x..
+F2B4 79000C  		ADC     %>00,R12                                y..
+F2B7 8EF311  		CALL    @ROLR13         ; Roll R12:R13 according...
+F2BA 76040A07		BTJO    %>04,R10,WOBUFX                         v...
+F2BE 980D05  		MOVD    R13,R5                                  ...
+F2C1 8EF331  	WRBUFX	CALL    @CHKBUF         ; Check if inp or out bu..1
+F2C4 0A      		RETS                                            .
+
+F2C5 980D09  	WOBUFX	MOVD    R13,R9                                  ...
+F2C8 E0F7    		JMP     WRBUFX                                  ..
+
+			; read from input or output buffer
+F2CA 76040A0B	RDBUF	BTJO    %>04,R10,RDOBUF ; read from output buffev...
+F2CE 98030D  		MOVD    R3,R13                                  ...
+F2D1 76020B0D		BTJO    %>02,R11,RDBUF1 ; Read byte from buffer v...
+F2D5 D337    		INC     R55                                     .7
+F2D7 E009    		JMP     RDBUF1          ; Read byte from buffer ..
+
+			; read from output buffer
+F2D9 98070D  	RDOBUF	MOVD    R7,R13                                  ...
+F2DC D336    		INC     R54                                     .6
+F2DE E702    		JNC     RDBUF1          ; Read byte from buffer ..
+F2E0 D335    		INC     R53                                     .5
+			; Read byte from buffer
+F2E2 9A0D    	RDBUF1	LDA     *R13                                    ..
+F2E4 76040A0B		BTJO    %>04,R10,LF2F3                          v...
+F2E8 278005  		BTJZ    %>80,A,LF2F0                            '..
+F2EB 74010A  		OR      %>01,R10                                t..
+F2EE E003    		JMP     LF2F3                                   ..
+
+F2F0 73FE0A  	LF2F0	AND     %>FE,R10                                s..
+F2F3 B8      	LF2F3	PUSH    A                                       .
+F2F4 8A000D  		LDA     @>000D                                  ...
+F2F7 78010D  		ADD     %>01,R13                                x..
+F2FA 79000C  		ADC     %>00,R12                                y..
+F2FD 8EF311  		CALL    @ROLR13         ; Roll R12:R13 according...
+F300 76040A05		BTJO    %>04,R10,ROBUFX                         v...
+F304 980D03  		MOVD    R13,R3                                  ...
+F307 B9      		POP     A                                       .
+F308 0A      		RETS                                            .
+
+F309 980D07  	ROBUFX	MOVD    R13,R7                                  ...
+F30C 8EF335  		CALL    @CKOBUF         ; Check if output buffer..5
+F30F B9      		POP     A                                       .
+F310 0A      		RETS                                            .
+
+			; Roll R12:R13 according to active buffer (R10.2)
+F311 76040A0E	ROLR13	BTJO    %>04,R10,ROLOUT ; Roll output buffer    v...
+			; Roll input buffer
+F315 4D2B0D  	ROLINP	CMP     R43,R13                                 M+.
+F318 E608    		JNZ     LF322                                   ..
+F31A 4D2A0C  		CMP     R42,R12                                 M*.
+F31D E603    		JNZ     LF322                                   ..
+F31F 98290D  		MOVD    R41,R13                                 .).
+F322 0A      	LF322	RETS                                            .
+
+			; Roll output buffer
+F323 4D270D  	ROLOUT	CMP     R39,R13                                 M'.
+F326 E608    		JNZ     LF330                                   ..
+F328 4D260C  		CMP     R38,R12                                 M&.
+F32B E603    		JNZ     LF330                                   ..
+F32D 982B0D  		MOVD    R43,R13                                 .+.
+F330 0A      	LF330	RETS                                            .
+
+			; Check if inp or out buffer full or above HWM
+F331 77040A12	CHKBUF	BTJZ    %>04,R10,CKIBUF ; Check if input buffer w...
+			; Check if output buffer full or above high water mark
+F335 7D0135  	CKOBUF	CMP     %>01,R53                                }.5
+F338 E209    		JZ      LF343                                   ..
+F33A 4D3236  		CMP     R50,R54                                 M26
+F33D E404    		JP      LF343                                   ..
+F33F 74080B  		OR      %>08,R11                                t..
+F342 0A      		RETS                                            .
+
+F343 73F70B  	LF343	AND     %>F7,R11                                s..
+F346 0A      		RETS                                            .
+
+			; Check if input buffer full or above high water mark
+F347 7D0033  	CKIBUF	CMP     %>00,R51                                }.3
+F34A E40A    		JP      LF356                                   ..
+F34C 7D0134  		CMP     %>01,R52                                }.4
+F34F E405    		JP      LF356                                   ..
+F351 74200B  		OR      %>20,R11                                t..
+F354 E01B    		JMP     TXOFF           ; Send XOFF, clear DTR/B..
+
+F356 4D1E33  	LF356	CMP     R30,R51                                 M.3
+F359 E107    		JN      LF362                                   ..
+F35B E41B    		JP      TXON            ; Send XON, set DTR/BUSY..
+F35D 4D1F34  		CMP     R31,R52                                 M.4
+F360 E516    		JPZ     TXON            ; Send XON, set DTR/BUSY..
+F362 4D2033  	LF362	CMP     R32,R51                                 M.3
+F365 E41D    		JP      LF384                                   ..
+F367 E105    		JN      LF36E                                   ..
+F369 4D2134  		CMP     R33,R52                                 M!4
+F36C E416    		JP      LF384                                   ..
+F36E 74040B  	LF36E	OR      %>04,R11                                t..
+			; Send XOFF, clear DTR/BUSY*
+F371 A3FE06  	TXOFF	ANDP    %>FE,P6                                 ...
+F374 A21317  		MOVP    %>13,P23                                ...
+F377 0A      		RETS                                            .
+
+			; Send XON, set DTR/BUSY*
+F378 73DB0B  	TXON	AND     %>DB,R11                                s..
+F37B 8EF28C  		CALL    @ENINT          ; enable parallel or ser...
+F37E A40106  		ORP     %>01,P6                                 ...
+F381 A21117  		MOVP    %>11,P23                                ...
+F384 0A      	LF384	RETS                                            .
+
+			; INT1 handler (SP0256)
+F385 A3FE00  	INT1	ANDP    %>FE,P0                                 ...
+F388 B8      		PUSH    A                                       .
+F389 C8      		PUSH    B                                       .
+F38A D80A    		PUSH    R10                                     ..
+F38C D80C    		PUSH    R12                                     ..
+F38E D80D    		PUSH    R13                                     ..
+F390 74060A  		OR      %>06,R10                                t..
+F393 8EF298  		CALL    @RWBUFR         ; read/write in input/ou...
+F396 982D1B  		MOVD    R45,R27                                 .-.
+F399 48001B  		ADD     R0,R27                                  H..
+F39C 9B1B    		STA     *R27                                    ..
+F39E D90D    		POP     R13                                     ..
+F3A0 D90C    		POP     R12                                     ..
+F3A2 D90A    		POP     R10                                     ..
+F3A4 C9      		POP     B                                       .
+F3A5 B9      		POP     A                                       .
+F3A6 4D0709  		CMP     R7,R9                                   M..
+F3A9 E203    		JZ      LF3AE                                   ..
+F3AB A40100  		ORP     %>01,P0                                 ...
+F3AE 0B      	LF3AE	RETI                                            .
+
+			; select rules set
+F3AF 2D30    	SELRUL	CMP     %>30,A                                  -0
+F3B1 E502    		JPZ     LF3B5                                   ..
+F3B3 E02A    		JMP     LF3DF                                   .*
+
+F3B5 2D3A    	LF3B5	CMP     %>3A,A                                  -:
+F3B7 E508    		JPZ     LF3C1                                   ..
+F3B9 88FF8E15		MOVD    %RULNUM,R21     ; Rules for digits      ....
+F3BD 73DF0A  		AND     %>DF,R10                                s..
+F3C0 0A      		RETS                                            .
+
+F3C1 2D41    	LF3C1	CMP     %>41,A                                  -A
+F3C3 E502    		JPZ     LF3C7                                   ..
+F3C5 E018    		JMP     LF3DF                                   ..
+
+F3C7 2D5B    	LF3C7	CMP     %>5B,A                                  -[
+F3C9 E504    		JPZ     LF3CF                                   ..
+F3CB 74200A  		OR      %>20,R10                                t..
+F3CE 0A      		RETS                                            .
+
+F3CF 2D61    	LF3CF	CMP     %>61,A                                  -a
+F3D1 E502    		JPZ     LF3D5                                   ..
+F3D3 E00A    		JMP     LF3DF                                   ..
+
+F3D5 2D7B    	LF3D5	CMP     %>7B,A                                  -{
+F3D7 E506    		JPZ     LF3DF                                   ..
+F3D9 2A20    		SUB     %>20,A                                  *.
+F3DB 74200A  		OR      %>20,R10                                t..
+F3DE 0A      		RETS                                            .
+
+F3DF 73DF0A  	LF3DF	AND     %>DF,R10                                s..
+F3E2 88F78C15		MOVD    %RLPNCT,R21     ; Rules for punctuation ....
+F3E6 0A      		RETS                                            .
+
+			; Encode text to allophones
+F3E7 7D0030  	ENCODE	CMP     %>00,R48                                }.0
+F3EA E202    		JZ      LF3EE                                   ..
+F3EC 9C31    		BR      *R49                                    .1
+
+F3EE 980311  	LF3EE	MOVD    R3,R17                                  ...
+F3F1 8EF74B  		CALL    @DECR17         ; dec R16:17 and roll if..K
+F3F4 8EF70F  	LF3F4	CALL    @FETCH          ; Fetch char and mask hi...
+F3F7 77010A05		BTJZ    %>01,R10,LF400                          w...
+F3FB 74800B  		OR      %>80,R11                                t..
+F3FE E003    		JMP     LF403                                   ..
+
+F400 737F0B  	LF400	AND     %>7F,R11                                s..
+F403 8EF3AF  	LF403	CALL    @SELRUL         ; select rules set      ...
+F406 77200A11		BTJZ    %>20,R10,LF41B                          w...
+F40A C5      		CLR     B                                       .
+F40B 2A41    		SUB     %>41,A                                  *A
+F40D 2C02    		MPY     %>02,A                                  ,.
+F40F 5802    		ADD     %>02,B                                  X.
+F411 AAFFBC  		LDA     @TABRUL(B)      ; Index of rules tables ...
+F414 D014    		MOV     A,R20                                   ..
+F416 AAFFBD  		LDA     @TABRU1(B)      ; Index of rules tables ...
+F419 D015    		MOV     A,R21                                   ..
+F41B 5201    	LF41B	MOV     %>01,B                                  R.
+F41D 8EF488  		CALL    @RSEEKB         ; right seek Bth '['    ...
+F420 8EF4C2  	LF420	CALL    @CMPBKT         ; compare in-brackets   ...
+F423 76100A40		BTJO    %>10,R10,LF467                          v..@
+F427 98111D  		MOVD    R17,R29                                 ...
+F42A 73BF0A  		AND     %>BF,R10                                s..
+F42D 8EF564  		CALL    @CHKPAT         ; Check rule pattern    ..d
+F430 76100A33		BTJO    %>10,R10,LF467                          v..3
+F434 8EF47E  		CALL    @LSEEKB         ; left seek '['         ..~
+F437 74400A  		OR      %>40,R10                                t@.
+F43A 8EF564  		CALL    @CHKPAT         ; Check rule pattern    ..d
+F43D 76100A39		BTJO    %>10,R10,LF47A                          v..9
+F441 483734  		ADD     R55,R52                                 H74
+F444 790033  		ADC     %>00,R51                                y.3
+F447 D537    		CLR     R55                                     .7
+F449 73FD0B  		AND     %>FD,R11                                s..
+F44C 5202    		MOV     %>02,B                                  R.
+F44E 8EF488  		CALL    @RSEEKB         ; right seek Bth '['    ...
+F451 8EF49E  		CALL    @WRALLO         ; Write allophones      ...
+F454 980F03  		MOVD    R15,R3                                  ...
+F457 980311  		MOVD    R3,R17                                  ...
+F45A 8EF74B  		CALL    @DECR17         ; dec R16:17 and roll if..K
+F45D 77800B93		BTJZ    %>80,R11,LF3F4                          w...
+F461 DB39    		DECD    R57                                     .9
+F463 8EF347  		CALL    @CKIBUF         ; Check if input buffer ..G
+F466 0A      		RETS                                            .
+
+F467 D315    	LF467	INC     R21                                     ..
+F469 E702    		JNC     LF46D                                   ..
+F46B D314    		INC     R20                                     ..
+F46D 5202    	LF46D	MOV     %>02,B                                  R.
+F46F 8EF488  	LF46F	CALL    @RSEEKB         ; right seek Bth '['    ...
+F472 720137  		MOV     %>01,R55                                r.7
+F475 73FD0B  		AND     %>FD,R11                                s..
+F478 E0A6    		JMP     LF420                                   ..
+
+F47A 5203    	LF47A	MOV     %>03,B                                  R.
+F47C E0F1    		JMP     LF46F                                   ..
+
+			; left seek '['
+F47E 9A15    	LSEEKB	LDA     *R21                                    ..
+F480 274001  		BTJZ    %>40,A,LF484                            '@.
+F483 0A      		RETS                                            .
+
+F484 DB15    	LF484	DECD    R21                                     ..
+F486 E0F6    		JMP     LSEEKB          ; left seek '['         ..
+
+			; right seek Bth '['
+F488 D517    	RSEEKB	CLR     R23                                     ..
+F48A 9A15    	LF48A	LDA     *R21                                    ..
+F48C 274007  		BTJZ    %>40,A,LF496                            '@.
+F48F D317    		INC     R23                                     ..
+F491 3D17    		CMP     R23,B                                   =.
+F493 E601    		JNZ     LF496                                   ..
+F495 0A      		RETS                                            .
+
+F496 D315    	LF496	INC     R21                                     ..
+F498 E702    		JNC     LF49C                                   ..
+F49A D314    		INC     R20                                     ..
+F49C E0EC    	LF49C	JMP     LF48A                                   ..
+
+			; Write allophones
+F49E D517    	WRALLO	CLR     R23                                     ..
+F4A0 9A15    		LDA     *R21                                    ..
+F4A2 2DFF    		CMP     %>FF,A                                  -.
+F4A4 E21B    		JZ      LF4C1                                   ..
+F4A6 278002  		BTJZ    %>80,A,LF4AB                            '..
+F4A9 D317    		INC     R23                                     ..
+F4AB 233F    	LF4AB	AND     %>3F,A                                  #?
+F4AD 73FD0A  		AND     %>FD,R10                                s..
+F4B0 74040A  		OR      %>04,R10                                t..
+F4B3 8EF298  		CALL    @RWBUFR         ; read/write in input/ou...
+F4B6 D315    		INC     R21                                     ..
+F4B8 E702    		JNC     LF4BC                                   ..
+F4BA D314    		INC     R20                                     ..
+F4BC 7D0117  	LF4BC	CMP     %>01,R23                                }..
+F4BF E6DD    		JNZ     WRALLO          ; Write allophones      ..
+F4C1 0A      	LF4C1	RETS                                            .
+
+			; compare in-brackets
+F4C2 980313  	CMPBKT	MOVD    R3,R19                                  ...
+F4C5 73F70A  		AND     %>F7,R10                                s..
+F4C8 77200A08		BTJZ    %>20,R10,LF4D4                          w...
+F4CC 9A15    		LDA     *R21                                    ..
+F4CE 2DFF    		CMP     %>FF,A                                  -.
+F4D0 E60B    		JNZ     LF4DD                                   ..
+F4D2 E02E    		JMP     LF502                                   ..
+
+F4D4 2DFF    	LF4D4	CMP     %>FF,A                                  -.
+F4D6 E22A    		JZ      LF502                                   .*
+F4D8 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F4DB D237    		DEC     R55                                     .7
+F4DD 8EF70F  	LF4DD	CALL    @FETCH          ; Fetch char and mask hi...
+F4E0 2D61    		CMP     %>61,A                                  -a
+F4E2 E102    		JN      LF4E6                                   ..
+F4E4 2A20    		SUB     %>20,A                                  *.
+F4E6 2A20    	LF4E6	SUB     %>20,A                                  *.
+F4E8 C0      		MOV     A,B                                     .
+F4E9 9A15    		LDA     *R21                                    ..
+F4EB 278003  		BTJZ    %>80,A,LF4F1                            '..
+F4EE 74080A  		OR      %>08,R10                                t..
+F4F1 233F    	LF4F1	AND     %>3F,A                                  #?
+F4F3 3D00    		CMP     R0,B                                    =.
+F4F5 E207    		JZ      LF4FE                                   ..
+F4F7 74100A  		OR      %>10,R10                                t..
+F4FA 981303  		MOVD    R19,R3                                  ...
+F4FD 0A      		RETS                                            .
+
+F4FE 77080A0A	LF4FE	BTJZ    %>08,R10,LF50C                          w...
+F502 98030F  	LF502	MOVD    R3,R15                                  ...
+F505 73EF0A  		AND     %>EF,R10                                s..
+F508 74020B  		OR      %>02,R11                                t..
+F50B 0A      		RETS                                            .
+
+F50C D315    	LF50C	INC     R21                                     ..
+F50E E7CD    		JNC     LF4DD                                   ..
+F510 D314    		INC     R20                                     ..
+F512 E0C9    		JMP     LF4DD                                   ..
+
+			; Get letter flags
+F514 3216    	GFLAGS	MOV     R22,B                                   2.
+F516 5D3A    		CMP     %>3A,B                                  ]:
+F518 E40A    		JP      GFLAGX                                  ..
+F51A 5D21    		CMP     %>21,B                                  ]!
+F51C E106    		JN      GFLAGX                                  ..
+F51E 5A21    		SUB     %>21,B                                  Z!
+F520 AAF526  		LDA     @LTFLGS(B)      ; Letter flags          ..&
+F523 0A      		RETS                                            .
+
+F524 B5      	GFLAGX	CLR     A                                       .
+F525 0A      		RETS                                            .
+
+			; Letter flags
+F526         	LTFLGS	BYTE	>80,>48,>28,>58,>85,>08,>68,>08
+F52E         		BYTE	>84,>78,>08,>58,>48,>58,>82,>08
+F536         		BYTE	>08,>58,>38,>18,>82,>48,>48,>28
+F53E         		BYTE	>84,>78
+
+			; Pattern jump table
+F540 8CF69E  	PATBRT	BR      @PATVOW         ; #	09	1+ vowels        ...
+
+F543 8CF6B4  		BR      @PATVOC         ; .	0A	voiced consonant:...
+
+F546 8CF601  		BR      @PATSUF         ; %	0B	suffix: -ER(S) -E...
+
+F549 8CF6D7  		BR      @PATSIB         ; &	0C	sibilant: S C G Z...
+
+F54C 8CF6E2  		BR      @PATPLU         ; @	0D	T S R D L Z N J T...
+
+F54F 8CF6BF  		BR      @PAT1CO         ; ^	0E	1 consonant only ...
+
+F552 8CF6C7  		BR      @PATFVO         ; +	0F	front vowel: E I ...
+
+F555 8CF5EA  		BR      @PAT0MC         ; :	10	0+ consonants    ...
+
+F558 8CF5B9  		BR      @PAT1MC         ; *	11	1+ consonants    ...
+
+F55B 8CF6CF  		BR      @PATBVO         ; >	12	back vowel: O U  ...
+
+F55E 8CF5B0  		BR      @PATNLT         ; <	13	Anything other th...
+
+F561 8CF5CC  		BR      @PAT2MV         ; ?	14	2+ vowels        ...
+
+			; Check rule pattern
+F564 76400A0A	CHKPAT	BTJO    %>40,R10,LF572                          v@..
+F568 5240    		MOV     %>40,B                                  R@
+F56A D315    		INC     R21                                     ..
+F56C E702    		JNC     LF570                                   ..
+F56E D314    		INC     R20                                     ..
+F570 E004    	LF570	JMP     LF576                                   ..
+
+F572 5280    	LF572	MOV     %>80,B                                  R.
+F574 DB15    		DECD    R21                                     ..
+F576 9A15    	LF576	LDA     *R21                                    ..
+F578 6712    		BTJZ    B,A,LF58C                               g.
+F57A 76400A04		BTJO    %>40,R10,LF582                          v@..
+F57E DB15    		DECD    R21                                     ..
+F580 E006    		JMP     LF588                                   ..
+
+F582 D315    	LF582	INC     R21                                     ..
+F584 E702    		JNC     LF588                                   ..
+F586 D314    		INC     R20                                     ..
+F588 73EF0A  	LF588	AND     %>EF,R10                                s..
+F58B 0A      		RETS                                            .
+
+F58C 8EF75B  	LF58C	CALL    @GNEXT          ; get next char and move..[
+F58F 9A15    		LDA     *R21                                    ..
+F591 2D15    		CMP     %>15,A                                  -.
+F593 E10F    		JN      LF5A4                                   ..
+F595 4D0016  	LF595	CMP     R0,R22                                  M..
+F598 E2CA    		JZ      CHKPAT          ; Check rule pattern    ..
+			; pattern match failed
+F59A 74100A  	PATFLD	OR      %>10,R10                                t..
+F59D 981303  		MOVD    R19,R3                                  ...
+F5A0 981D11  		MOVD    R29,R17                                 ...
+F5A3 0A      		RETS                                            .
+
+F5A4 2D07    	LF5A4	CMP     %>07,A                                  -.
+F5A6 E2ED    		JZ      LF595                                   ..
+F5A8 C0      		MOV     A,B                                     .
+F5A9 5A09    		SUB     %>09,B                                  Z.
+F5AB 5C03    		MPY     %>03,B                                  \.
+F5AD ACF540  		BR      @PATBRT(B)      ; Pattern jump table    ..@
+
+			; <	13	Anything other than a letter
+F5B0 8EF514  	PATNLT	CALL    @GFLAGS         ; Get letter flags      ...
+F5B3 2D00    		CMP     %>00,A                                  -.
+F5B5 E247    		JZ      PATOK1          ; pattern match ok      .G
+F5B7 E0E1    		JMP     PATFLD          ; pattern match failed  ..
+
+			; *	11	1+ consonants
+F5B9 8EF514  	PAT1MC	CALL    @GFLAGS         ; Get letter flags      ...
+F5BC 260802  		BTJO    %>08,A,LF5C1                            &..
+F5BF E0D9    		JMP     PATFLD          ; pattern match failed  ..
+
+F5C1 8EF75B  	LF5C1	CALL    @GNEXT          ; get next char and move..[
+F5C4 8EF514  		CALL    @GFLAGS         ; Get letter flags      ...
+F5C7 2608F7  		BTJO    %>08,A,LF5C1                            &..
+F5CA E02F    		JMP     LF5FB                                   ./
+
+			; ?	14	2+ vowels
+F5CC 8EF514  	PAT2MV	CALL    @GFLAGS         ; Get letter flags      ...
+F5CF 268002  		BTJO    %>80,A,LF5D4                            &..
+F5D2 E0C6    		JMP     PATFLD          ; pattern match failed  ..
+
+F5D4 8EF75B  	LF5D4	CALL    @GNEXT          ; get next char and move..[
+F5D7 8EF514  		CALL    @GFLAGS         ; Get letter flags      ...
+F5DA 268002  		BTJO    %>80,A,LF5DF                            &..
+F5DD E0BB    		JMP     PATFLD          ; pattern match failed  ..
+
+F5DF 8EF75B  	LF5DF	CALL    @GNEXT          ; get next char and move..[
+F5E2 8EF514  		CALL    @GFLAGS         ; Get letter flags      ...
+F5E5 2680F7  		BTJO    %>80,A,LF5DF                            &..
+F5E8 E011    		JMP     LF5FB                                   ..
+
+			; :	10	0+ consonants
+F5EA 8EF514  	PAT0MC	CALL    @GFLAGS         ; Get letter flags      ...
+F5ED 260802  		BTJO    %>08,A,LF5F2                            &..
+F5F0 E009    		JMP     LF5FB                                   ..
+
+F5F2 8EF75B  	LF5F2	CALL    @GNEXT          ; get next char and move..[
+F5F5 8EF514  		CALL    @GFLAGS         ; Get letter flags      ...
+F5F8 2608F7  		BTJO    %>08,A,LF5F2                            &..
+F5FB 8EF77F  	LF5FB	CALL    @UNGET          ; Unget last input chara...
+			; pattern match ok
+F5FE 8CF564  	PATOK1	BR      @CHKPAT         ; Check rule pattern    ..d
+
+			; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+F601 8EF514  	PATSUF	CALL    @GFLAGS         ; Get letter flags      ...
+F604 260150  		BTJO    %>01,A,LF657                            &.P
+F607 7D2916  		CMP     %>29,R22                                }).
+F60A E230    		JZ      LF63C                                   .0
+F60C 7D2D16  		CMP     %>2D,R22                                }-.
+F60F E207    		JZ      LF618                                   ..
+F611 7D2F16  		CMP     %>2F,R22                                }/.
+F614 E21D    		JZ      LF633                                   ..
+F616 E071    		JMP     PATFL1          ; pattern match failed  .q
+
+F618 8EF70F  	LF618	CALL    @FETCH          ; Fetch char and mask hi...
+F61B 2D45    		CMP     %>45,A                                  -E
+F61D E202    		JZ      LF621                                   ..
+F61F E068    		JMP     PATFL1          ; pattern match failed  .h
+
+F621 8EF70F  	LF621	CALL    @FETCH          ; Fetch char and mask hi...
+F624 2D4E    		CMP     %>4E,A                                  -N
+F626 E202    		JZ      LF62A                                   ..
+F628 E05F    		JMP     PATFL1          ; pattern match failed  ._
+
+F62A 8EF70F  	LF62A	CALL    @FETCH          ; Fetch char and mask hi...
+F62D 2D54    		CMP     %>54,A                                  -T
+F62F E21D    		JZ      LF64E                                   ..
+F631 E056    		JMP     PATFL1          ; pattern match failed  .V
+
+F633 8EF70F  	LF633	CALL    @FETCH          ; Fetch char and mask hi...
+F636 2D52    		CMP     %>52,A                                  -R
+F638 E214    		JZ      LF64E                                   ..
+F63A E04D    		JMP     PATFL1          ; pattern match failed  .M
+
+F63C 8EF70F  	LF63C	CALL    @FETCH          ; Fetch char and mask hi...
+F63F 2D4E    		CMP     %>4E,A                                  -N
+F641 E202    		JZ      LF645                                   ..
+F643 E044    		JMP     PATFL1          ; pattern match failed  .D
+
+F645 8EF70F  	LF645	CALL    @FETCH          ; Fetch char and mask hi...
+F648 2D47    		CMP     %>47,A                                  -G
+F64A E202    		JZ      LF64E                                   ..
+F64C E03B    		JMP     PATFL1          ; pattern match failed  .;
+
+F64E 8EF68C  	LF64E	CALL    @CHKLTR         ; Test if next input cha...
+F651 76200A34		BTJO    %>20,R10,PATFL1 ; pattern match failed  v..4
+F655 E065    		JMP     PATOK2                                  .e
+
+F657 8EF70F  	LF657	CALL    @FETCH          ; Fetch char and mask hi...
+F65A 2D52    		CMP     %>52,A                                  -R
+F65C E60C    		JNZ     LF66A                                   ..
+F65E 8EF70F  		CALL    @FETCH          ; Fetch char and mask hi...
+F661 2D53    		CMP     %>53,A                                  -S
+F663 E2E9    		JZ      LF64E                                   ..
+F665 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F668 E0E4    		JMP     LF64E                                   ..
+
+F66A 2D53    	LF66A	CMP     %>53,A                                  -S
+F66C E2E0    		JZ      LF64E                                   ..
+F66E 2D44    		CMP     %>44,A                                  -D
+F670 E2DC    		JZ      LF64E                                   ..
+F672 2D4C    		CMP     %>4C,A                                  -L
+F674 E20C    		JZ      LF682                                   ..
+F676 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F679 8EF68C  		CALL    @CHKLTR         ; Test if next input cha...
+F67C 77200A3C		BTJZ    %>20,R10,PATOK2                         w..<
+F680 E007    		JMP     PATFL1          ; pattern match failed  ..
+
+F682 8EF70F  	LF682	CALL    @FETCH          ; Fetch char and mask hi...
+F685 2D59    		CMP     %>59,A                                  -Y
+F687 E2C5    		JZ      LF64E                                   ..
+			; pattern match failed
+F689 8CF59A  	PATFL1	BR      @PATFLD         ; pattern match failed  ...
+
+			; Test if next input char is a letter, R10.5=1 if yes
+F68C 8EF70F  	CHKLTR	CALL    @FETCH          ; Fetch char and mask hi...
+F68F D815    		PUSH    R21                                     ..
+F691 D814    		PUSH    R20                                     ..
+F693 8EF3AF  		CALL    @SELRUL         ; select rules set      ...
+F696 D914    		POP     R20                                     ..
+F698 D915    		POP     R21                                     ..
+F69A 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F69D 0A      		RETS                                            .
+
+			; #	09	1+ vowels
+F69E 8EF514  	PATVOW	CALL    @GFLAGS         ; Get letter flags      ...
+F6A1 268002  		BTJO    %>80,A,LF6A6                            &..
+F6A4 E0E3    		JMP     PATFL1          ; pattern match failed  ..
+
+F6A6 8EF75B  	LF6A6	CALL    @GNEXT          ; get next char and move..[
+F6A9 8EF514  		CALL    @GFLAGS         ; Get letter flags      ...
+F6AC 2680F7  		BTJO    %>80,A,LF6A6                            &..
+F6AF 8EF77F  		CALL    @UNGET          ; Unget last input chara...
+F6B2 E008    		JMP     PATOK2                                  ..
+
+			; .	0A	voiced consonant: B D G J L M N R V W X
+F6B4 8EF514  	PATVOC	CALL    @GFLAGS         ; Get letter flags      ...
+F6B7 264002  		BTJO    %>40,A,PATOK2                           &@.
+F6BA E0CD    		JMP     PATFL1          ; pattern match failed  ..
+
+F6BC 8CF564  	PATOK2	BR      @CHKPAT         ; Check rule pattern    ..d
+
+			; ^	0E	1 consonant only
+F6BF 8EF514  	PAT1CO	CALL    @GFLAGS         ; Get letter flags      ...
+F6C2 2608F7  		BTJO    %>08,A,PATOK2                           &..
+F6C5 E0C2    		JMP     PATFL1          ; pattern match failed  ..
+
+			; +	0F	front vowel: E I Y
+F6C7 8EF514  	PATFVO	CALL    @GFLAGS         ; Get letter flags      ...
+F6CA 2604EF  		BTJO    %>04,A,PATOK2                           &..
+F6CD E0BA    		JMP     PATFL1          ; pattern match failed  ..
+
+			; >	12	back vowel: O U
+F6CF 8EF514  	PATBVO	CALL    @GFLAGS         ; Get letter flags      ...
+F6D2 2602E7  		BTJO    %>02,A,PATOK2                           &..
+F6D5 E0B2    		JMP     PATFL1          ; pattern match failed  ..
+
+			; &	0C	sibilant: S C G Z X J CH SH
+F6D7 8EF514  	PATSIB	CALL    @GFLAGS         ; Get letter flags      ...
+F6DA 2620DF  		BTJO    %>20,A,PATOK2                           &..
+F6DD 8EF75B  		CALL    @GNEXT          ; get next char and move..[
+F6E0 E00E    		JMP     LF6F0                                   ..
+
+			; @	0D	T S R D L Z N J TH CH SH preceding long U
+F6E2 8EF514  	PATPLU	CALL    @GFLAGS         ; Get letter flags      ...
+F6E5 2610D4  		BTJO    %>10,A,PATOK2                           &..
+F6E8 8EF75B  		CALL    @GNEXT          ; get next char and move..[
+F6EB 7D3416  		CMP     %>34,R22                                }4.
+F6EE E20C    		JZ      LF6FC                                   ..
+F6F0 7D2316  	LF6F0	CMP     %>23,R22                                }#.
+F6F3 E207    		JZ      LF6FC                                   ..
+F6F5 7D3316  		CMP     %>33,R22                                }3.
+F6F8 E202    		JZ      LF6FC                                   ..
+F6FA E08D    		JMP     PATFL1          ; pattern match failed  ..
+
+F6FC 981103  	LF6FC	MOVD    R17,R3                                  ...
+F6FF 8EF72B  		CALL    @INCR3          ; inc R2:3 and roll if n..+
+F702 8EF72B  		CALL    @INCR3          ; inc R2:3 and roll if n..+
+F705 8EF70F  		CALL    @FETCH          ; Fetch char and mask hi...
+F708 2D48    		CMP     %>48,A                                  -H
+F70A E2B0    		JZ      PATOK2                                  ..
+F70C 8CF59A  		BR      @PATFLD         ; pattern match failed  ...
+
+			; Fetch char and mask high bit
+F70F 74020A  	FETCH	OR      %>02,R10                                t..
+F712 73FB0A  		AND     %>FB,R10                                s..
+F715 8EF298  		CALL    @RWBUFR         ; read/write in input/ou...
+F718 237F    		AND     %>7F,A                                  #.
+F71A 0A      		RETS                                            .
+
+			; inc R16:17 and roll if needed
+F71B D311    	INCR17	INC     R17                                     ..
+F71D E702    		JNC     LF721                                   ..
+F71F D310    		INC     R16                                     ..
+F721 98110D  	LF721	MOVD    R17,R13                                 ...
+F724 8EF315  		CALL    @ROLINP         ; Roll input buffer     ...
+F727 980D11  		MOVD    R13,R17                                 ...
+F72A 0A      		RETS                                            .
+
+			; inc R2:3 and roll if needed
+F72B D303    	INCR3	INC     R3                                      ..
+F72D E702    		JNC     LF731                                   ..
+F72F D302    		INC     R2                                      ..
+F731 98030D  	LF731	MOVD    R3,R13                                  ...
+F734 8EF315  		CALL    @ROLINP         ; Roll input buffer     ...
+F737 980D03  		MOVD    R13,R3                                  ...
+F73A 0A      		RETS                                            .
+
+			; dec R2:3 and roll if needed
+F73B DB03    	DECR3	DECD    R3                                      ..
+F73D 4D2303  		CMP     R35,R3                                  M#.
+F740 E608    		JNZ     LF74A                                   ..
+F742 4D2202  		CMP     R34,R2                                  M".
+F745 E603    		JNZ     LF74A                                   ..
+F747 982503  		MOVD    R37,R3                                  .%.
+F74A 0A      	LF74A	RETS                                            .
+
+			; dec R16:17 and roll if needed
+F74B DB11    	DECR17	DECD    R17                                     ..
+F74D 4D2311  		CMP     R35,R17                                 M#.
+F750 E608    		JNZ     LF75A                                   ..
+F752 4D2210  		CMP     R34,R16                                 M".
+F755 E603    		JNZ     LF75A                                   ..
+F757 982511  		MOVD    R37,R17                                 .%.
+F75A 0A      	LF75A	RETS                                            .
+
+			; get next char and move code to range 00-3F
+F75B 77400A07	GNEXT	BTJZ    %>40,R10,LF766                          w@..
+F75F D803    		PUSH    R3                                      ..
+F761 D802    		PUSH    R2                                      ..
+F763 981103  		MOVD    R17,R3                                  ...
+F766 8EF70F  	LF766	CALL    @FETCH          ; Fetch char and mask hi...
+F769 77400A07		BTJZ    %>40,R10,LF774                          w@..
+F76D 8EF74B  		CALL    @DECR17         ; dec R16:17 and roll if..K
+F770 D902    		POP     R2                                      ..
+F772 D903    		POP     R3                                      ..
+F774 2D61    	LF774	CMP     %>61,A                                  -a
+F776 E102    		JN      LF77A                                   ..
+F778 2A20    		SUB     %>20,A                                  *.
+F77A 2A20    	LF77A	SUB     %>20,A                                  *.
+F77C D016    		MOV     A,R22                                   ..
+F77E 0A      		RETS                                            .
+
+			; Unget last input character
+F77F 76400A04	UNGET	BTJO    %>40,R10,LF787                          v@..
+F783 8EF73B  		CALL    @DECR3          ; dec R2:3 and roll if n..;
+F786 0A      		RETS                                            .
+
+F787 8EF71B  	LF787	CALL    @INCR17         ; inc R16:17 and roll if...
+F78A 0A      		RETS                                            .
+
+F78B         		BYTE	>FF
+			; Rules for punctuation
+F78C         	RLPNCT	BYTE	>CD,>C0,>0A,>47,>B3,>EB,>09,>10
+F794         		BYTE	>0A,>25,>47,>B3,>EB,>09,>47,>B3
+F79C         		BYTE	>EB,>47,>B3,>F7,>C7,>FF,>CC,>C3
+F7A4         		BYTE	>DB,>C3,>C0,>C1,>CE,>44,>84,>C1
+F7AC         		BYTE	>44,>84,>DF,>44,>84,>DA,>C4,>C5
+F7B4         		BYTE	>49,>34,>37,>37,>07,>0B,>0D,>80
+F7BC         		BYTE	>C4,>61,>18,>2D,>33,>2B,>80,>C3
+F7C4         		BYTE	>78,>0F,>10,>1C,>33,>80,>FF,>C2
+			; Rules for 'A'
+F7CC         	RULESA	BYTE	>13,>FF,>13,>D4,>63,>28,>A5,>54
+F7D4         		BYTE	>02,>A9,>FF,>13,>CF,>13,>72,>A5
+F7DC         		BYTE	>13,>FB,>0E,>F3,>09,>54,>B7,>13
+F7E4         		BYTE	>F2,>2F,>4F,>A7,>13,>FF,>0E,>32
+F7EC         		BYTE	>CF,>F2,>09,>EF,>13,>10,>6E,>B9
+F7F4         		BYTE	>47,>0B,>93,>67,>21,>29,>AE,>4F
+F7FC         		BYTE	>01,>24,>07,>07,>8B,>FF,>37,>21
+F804         		BYTE	>CF,>F7,>57,>97,>13,>10,>FF,>0E
+F80C         		BYTE	>0F,>13,>D4,>13,>FF,>0E,>09,>CF
+F814         		BYTE	>FF,>0E,>0F,>09,>D4,>09,>10,>6C
+F81C         		BYTE	>2C,>B9,>4F,>2D,>93,>13,>EC,>09
+F824         		BYTE	>4F,>AD,>09,>10,>E7,>25,>4C,>01
+F82C         		BYTE	>8A,>FF,>0E,>0B,>D4,>FF,>0E,>0F
+F834         		BYTE	>10,>09,>DA,>13,>72,>B2,>4F,>A7
+F83C         		BYTE	>72,>B2,>5A,>A7,>13,>10,>F2,>13
+F844         		BYTE	>FB,>F2,>13,>F3,>F2,>FB,>69,>B2
+F84C         		BYTE	>47,>AF,>E9,>D4,>F9,>D4,>F5,>D7
+F854         		BYTE	>09,>10,>EC,>13,>FE,>09,>10,>6C
+F85C         		BYTE	>B3,>13,>7E,>AB,>6C,>AB,>57,>02
+F864         		BYTE	>A9,>FF,>2C,>0E,>D7,>13,>10,>62
+F86C         		BYTE	>2C,>A5,>54,>01,>3F,>BE,>62,>2C
+F874         		BYTE	>A5,>4F,>01,>3F,>BE,>6E,>A7,>0F
+F87C         		BYTE	>54,>0B,>01,>8A,>FF,>DA
+			; Rules for 'B'
+F882         	RULESB	BYTE	>13,>FF,>13,>41,>3F,>93,>2D,>21
+F88A         		BYTE	>39,>E5,>7F,>93,>13,>E5,>0E,>09
+F892         		BYTE	>41,>3F,>93,>13,>65,>25,>AE,>13
+F89A         		BYTE	>7F,>0C,>8B,>13,>6F,>34,>A8,>13
+F8A2         		BYTE	>41,>3F,>35,>9D,>13,>75,>B3,>09
+F8AA         		BYTE	>41,>3F,>0C,>AB,>75,>29,>AC,>41
+F8B2         		BYTE	>3F,>0C,>0C,>AD,>FF,>22,>FF,>FF
+F8BA         		BYTE	>13,>41,>9C,>FF,>33,>41,>9C,>F4
+F8C2         		BYTE	>42,>8D,>13,>FF,>0E,>41,>9C,>FF
+F8CA         		BYTE	>41,>BF
+			; Rules for 'C'
+F8CC         	RULESC	BYTE	>13,>FF,>13,>77,>37,>93,>13,>E8
+F8D4         		BYTE	>0E,>42,>AA,>0E,>25,>E8,>42,>AA
+F8DC         		BYTE	>E8,>42,>B2,>33,>E9,>09,>77,>37
+F8E4         		BYTE	>86,>E9,>09,>E5,>E9,>2F,>E5,>E9
+F8EC         		BYTE	>25,>2E,>E5,>FF,>0F,>77,>B7,>23
+F8F4         		BYTE	>FF,>FF,>EB,>09,>42,>AA,>EB,>42
+F8FC         		BYTE	>A9,>6F,>AD,>0B,>42,>08,>0F,>90
+F904         		BYTE	>E3,>0F,>42,>2A,>37,>B7,>FF,>13
+F90C         		BYTE	>42,>A9,>FF,>33,>42,>A9,>FF,>12
+F914         		BYTE	>42,>88,>FF,>42,>AA
+			; Rules for 'D'
+F919         	RULESD	BYTE	>13,>FF,>13,>41,>21,>93,>FF,>24
+F921         		BYTE	>FF,>09,>10,>65,>A4,>13,>41,>21
+F929         		BYTE	>0C,>01,>95,>0A,>25,>FF,>13,>41
+F931         		BYTE	>95,>09,>11,>25,>FF,>13,>42,>8D
+F939         		BYTE	>13,>E5,>0E,>09,>41,>21,>8C,>13
+F941         		BYTE	>EF,>13,>41,>21,>9F,>13,>6F,>25
+F949         		BYTE	>B3,>41,>21,>0F,>AB,>13,>6F,>29
+F951         		BYTE	>2E,>A7,>41,>21,>1F,>0C,>AC,>13
+F959         		BYTE	>6F,>B7,>41,>21,>A0,>09,>F5,>10
+F961         		BYTE	>21,>41,>0A,>96,>E7,>41,>8A,>EA
+F969         		BYTE	>41,>8A,>FF,>13,>41,>95,>FF,>33
+F971         		BYTE	>41,>95,>FF,>41,>A1
+			; Rules for 'E'
+F976         	RULESE	BYTE	>13,>FF,>13,>D3,>09,>10,>FF,>13
+F97E         		BYTE	>FF,>07,>11,>FF,>13,>FF,>11,>FF
+F986         		BYTE	>13,>D3,>09,>E4,>13,>41,>95,>09
+F98E         		BYTE	>10,>FF,>24,>13,>FF,>F6,>25,>32
+F996         		BYTE	>47,>A3,>09,>11,>EC,>FE,>72,>A9
+F99E         		BYTE	>09,>7C,>93,>09,>10,>F2,>09,>F3
+F9A6         		BYTE	>FF,>0E,>0B,>D3,>72,>A9,>47,>07
+F9AE         		BYTE	>0E,>8C,>F2,>09,>47,>AF,>F2,>F3
+F9B6         		BYTE	>13,>76,>25,>AE,>13,>53,>23,>0C
+F9BE         		BYTE	>8B,>13,>76,>25,>AE,>53,>23,>07
+F9C6         		BYTE	>07,>8B,>09,>10,>F7,>71,>9F,>0D
+F9CE         		BYTE	>F7,>DF,>F7,>71,>9F,>FF,>2F,>D3
+F9D6         		BYTE	>09,>10,>0C,>F3,>13,>4C,>AB,>09
+F9DE         		BYTE	>10,>FF,>33,>13,>FF,>09,>10,>6C
+F9E6         		BYTE	>B9,>13,>6D,>93,>09,>10,>6D,>25
+F9EE         		BYTE	>2E,>B4,>50,>0C,>0B,>02,>8D,>66
+F9F6         		BYTE	>35,>AC,>68,>1E,>AD,>65,>B2,>FC
+F9FE         		BYTE	>E5,>D3,>61,>32,>AE,>74,>8B,>13
+FA06         		BYTE	>61,>B2,>0E,>F4,>11,>61,>B2,>FC
+FA0E         		BYTE	>61,>A4,>47,>07,>01,>95,>09,>10
+FA16         		BYTE	>E1,>13,>53,>8F,>E1,>33,>35,>C7
+FA1E         		BYTE	>E1,>D3,>69,>27,>A8,>D4,>E9,>D3
+FA26         		BYTE	>13,>79,>A5,>C6,>F9,>D3,>F5,>D6
+FA2E         		BYTE	>FF,>C7
+			; Rules for 'F'
+FA30         	RULESF	BYTE	>13,>FF,>13,>47,>07,>A8,>F5,>2C
+FA38         		BYTE	>68,>9E,>FF,>26,>FF,>6F,>35,>B2
+FA40         		BYTE	>68,>BA,>FF,>E8
+			; Rules for 'G'
+FA44         	RULESG	BYTE	>13,>FF,>13,>41,>0A,>93,>69,>B6
+FA4C         		BYTE	>41,>24,>0C,>A3,>13,>FF,>29,>0E
+FA54         		BYTE	>41,>A4,>E5,>34,>41,>24,>87,>33
+FA5C         		BYTE	>35,>67,>25,>B3,>41,>3D,>01,>0A
+FA64         		BYTE	>07,>07,>B7,>E7,>41,>A4,>72,>25
+FA6C         		BYTE	>21,>B4,>41,>22,>27,>14,>8D,>FF
+FA74         		BYTE	>13,>41,>A2,>13,>22,>09,>FF,>41
+FA7C         		BYTE	>BD,>FF,>0F,>41,>8A,>09,>E8,>E8
+FA84         		BYTE	>E8,>41,>BD,>FF,>41,>BD
+			; Rules for 'H'
+FA8A         	RULESH	BYTE	>13,>FF,>13,>54,>02,>B2,>13,>61
+FA92         		BYTE	>B6,>5B,>1A,>A3,>13,>65,>32,>A5
+FA9A         		BYTE	>5B,>BC,>13,>6F,>35,>B2,>60,>B3
+FAA2         		BYTE	>6F,>B7,>5B,>A0,>79,>B0,>5B,>0C
+FAAA         		BYTE	>02,>89,>FF,>12,>F9,>FF,>09,>DB
+FAB2         		BYTE	>FF,>FF
+			; Rules for 'I'
+FAB4         	RULESI	BYTE	>13,>EE,>4C,>8B,>2E,>FF,>2E,>25
+FABC         		BYTE	>C6,>FF,>13,>C6,>EE,>24,>46,>8B
+FAC4         		BYTE	>13,>10,>FF,>0B,>C6,>13,>10,>65
+FACC         		BYTE	>A4,>13,>46,>01,>95,>09,>11,>65
+FAD4         		BYTE	>A4,>13,>53,>01,>95,>26,>32,>E5
+FADC         		BYTE	>2E,>24,>C7,>65,>AE,>53,>0C,>8B
+FAE4         		BYTE	>E5,>34,>46,>8C,>65,>B2,>53,>B3
+FAEC         		BYTE	>FF,>0B,>D3,>E5,>D3,>EE,>0B,>53
+FAF4         		BYTE	>8B,>F2,>09,>46,>B3,>FF,>0E,>0B
+FAFC         		BYTE	>C6,>FF,>0E,>0F,>10,>09,>CC,>FA
+FB04         		BYTE	>0B,>46,>AB,>F3,>0B,>46,>AB,>FF
+FB0C         		BYTE	>1F,>0B,>C6,>0F,>0E,>FF,>0E,>0F
+FB14         		BYTE	>CC,>FF,>34,>0B,>C6,>09,>11,>FF
+FB1C         		BYTE	>0E,>0F,>CC,>F2,>F4,>11,>FF,>2F
+FB24         		BYTE	>2E,>F1,>67,>A8,>C6,>6C,>A4,>46
+FB2C         		BYTE	>3E,>01,>95,>67,>AE,>46,>8B,>67
+FB34         		BYTE	>AE,>0E,>46,>8B,>67,>AE,>0B,>46
+FB3C         		BYTE	>8B,>71,>35,>A5,>53,>02,>A9,>FF
+FB44         		BYTE	>21,>C6,>2D,>FF,>23,>C6,>FF,>CC
+			; Rules for 'J'
+FB4C         	RULESJ	BYTE	>13,>FF,>13,>41,>0A,>94,>FF,>41
+FB54         		BYTE	>8A
+			; Rules for 'K'
+FB55         	RULESK	BYTE	>13,>FF,>13,>42,>2A,>94,>13,>FF
+FB5D         		BYTE	>2E,>FF,>FF,>13,>42,>A9,>FF,>42
+FB65         		BYTE	>AA
+			; Rules for 'L'
+FB66         	RULESL	BYTE	>13,>FF,>13,>47,>07,>AD,>EF,>23
+FB6E         		BYTE	>09,>6D,>B5,>FF,>2C,>FF,>FF,>0B
+FB76         		BYTE	>FE,>65,>21,>A4,>6D,>13,>01,>95
+FB7E         		BYTE	>61,>35,>27,>A8,>6D,>1A,>A8,>FF
+FB86         		BYTE	>ED
+			; Rules for 'M'
+FB87         	RULESM	BYTE	>E2,>D0,>13,>FF,>13,>47,>07,>90
+FB8F         		BYTE	>6F,>B6,>50,>1F,>A3,>FF,>2D,>FF
+FB97         		BYTE	>FF,>D0
+			; Rules for 'N'
+FB99         	RULESN	BYTE	>13,>FF,>13,>47,>07,>8B,>25,>E7
+FBA1         		BYTE	>0F,>4B,>01,>8A,>E7,>32,>6C,>01
+FBA9         		BYTE	>A4,>E7,>09,>6C,>01,>A4,>67,>AC
+FBB1         		BYTE	>0B,>6C,>01,>24,>BE,>E7,>EC,>EB
+FBB9         		BYTE	>13,>6C,>02,>A9,>EB,>33,>6C,>02
+FBC1         		BYTE	>A9,>EB,>6C,>02,>AA,>13,>6F,>B7
+FBC9         		BYTE	>13,>78,>A0,>FF,>2E,>FF,>09,>10
+FBD1         		BYTE	>F5,>4B,>31,>96,>13,>FF,>F8,>47
+FBD9         		BYTE	>B4,>4B,>02,>8D,>FF,>CB
+			; Rules for 'O'
+FBDF         	RULESO	BYTE	>13,>FF,>13,>F5,>E6,>13,>4F,>A3
+FBE7         		BYTE	>72,>2F,>35,>27,>A8,>4F,>0F,>27
+FBEF         		BYTE	>B5,>09,>10,>F2,>13,>F3,>09,>10
+FBF7         		BYTE	>72,>B3,>13,>73,>AB,>F2,>FA,>13
+FBFF         		BYTE	>6E,>A5,>6E,>0F,>8B,>0F,>6E,>A5
+FC07         		BYTE	>6E,>0F,>8B,>11,>F7,>2E,>E0,>F7
+FC0F         		BYTE	>F5,>13,>76,>25,>B2,>75,>23,>B3
+FC17         		BYTE	>F6,>4F,>A3,>FF,>0E,>0B,>F5,>FF
+FC1F         		BYTE	>0E,>25,>2E,>F5,>FF,>0E,>29,>09
+FC27         		BYTE	>F5,>EC,>24,>75,>AD,>75,>27,>28
+FC2F         		BYTE	>B4,>57,>17,>02,>8D,>75,>27,>A8
+FC37         		BYTE	>4F,>0F,>A8,>0C,>75,>B2,>FA,>10
+FC3F         		BYTE	>75,>B2,>60,>B3,>13,>F5,>E0,>10
+FC47         		BYTE	>F5,>33,>09,>E0,>75,>B3,>4F,>B7
+FC4F         		BYTE	>75,>2C,>A4,>5E,>01,>95,>0E,>F5
+FC57         		BYTE	>0E,>2C,>CF,>75,>B0,>5F,>02,>89
+FC5F         		BYTE	>F5,>E0,>F9,>C5,>69,>2E,>A7,>75
+FC67         		BYTE	>0C,>AC,>E9,>C5,>6F,>B2,>FA,>6F
+FC6F         		BYTE	>AB,>13,>5E,>02,>A9,>6F,>AB,>33
+FC77         		BYTE	>5E,>02,>A9,>6F,>AB,>5E,>02,>AA
+FC7F         		BYTE	>6F,>A4,>13,>5E,>01,>95,>EF,>24
+FC87         		BYTE	>DE,>EF,>DF,>FF,>25,>F5,>FF,>13
+FC8F         		BYTE	>F5,>61,>B2,>FA,>E1,>F5,>13,>6E
+FC97         		BYTE	>2C,>B9,>75,>0B,>2D,>93,>13,>6E
+FC9F         		BYTE	>23,>A5,>6E,>0F,>0B,>B7,>6E,>07
+FCA7         		BYTE	>B4,>75,>0B,>02,>8D,>23,>FF,>2E
+FCAF         		BYTE	>CF,>FF,>2E,>27,>D7,>13,>11,>FF
+FCB7         		BYTE	>2E,>CF,>29,>EE,>4F,>8B,>09,>10
+FCBF         		BYTE	>EE,>13,>4F,>8B,>FF,>33,>34,>13
+FCC7         		BYTE	>F5,>E6,>0E,>57,>A8,>74,>28,>25
+FCCF         		BYTE	>B2,>4F,>36,>B3,>73,>B3,>13,>57
+FCD7         		BYTE	>17,>37,>B7,>09,>11,>ED,>4F,>90
+FCDF         		BYTE	>FF,>D8
+			; Rules for 'P'
+FCE1         	RULESP	BYTE	>73,>39,>23,>A8,>77,>37,>06,>01
+FCE9         		BYTE	>AA,>13,>FF,>13,>42,>09,>93,>E8
+FCF1         		BYTE	>E8,>65,>2F,>B0,>42,>09,>13,>02
+FCF9         		BYTE	>89,>6F,>B7,>42,>09,>A0,>75,>B4
+FD01         		BYTE	>13,>42,>09,>1E,>02,>8D,>FF,>30
+FD09         		BYTE	>FF,>FF,>42,>89
+			; Rules for 'Q'
+FD0D         	RULESQ	BYTE	>13,>FF,>13,>42,>2A,>31,>9F,>75
+FD15         		BYTE	>21,>B2,>42,>08,>30,>98,>75,>A5
+FD1D         		BYTE	>13,>42,>2A,>31,>9F,>F5,>42,>08
+FD25         		BYTE	>B0,>FF,>42,>88
+			; Rules for 'R'
+FD29         	RULESR	BYTE	>13,>FF,>13,>FB,>13,>E5,>0E,>09
+FD31         		BYTE	>4E,>93,>E8,>CE,>FF,>32,>FF,>11
+FD39         		BYTE	>FF,>E7,>FF,>CE
+			; Rules for 'S'
+FD3D         	RULESS	BYTE	>13,>FF,>13,>47,>07,>37,>B7,>E8
+FD45         		BYTE	>E5,>09,>69,>2F,>AE,>66,>0F,>8B
+FD4D         		BYTE	>6F,>2D,>A5,>77,>0F,>90,>09,>75
+FD55         		BYTE	>B2,>09,>66,>B3,>75,>B2,>09,>65
+FD5D         		BYTE	>B3,>09,>F5,>09,>66,>96,>09,>73
+FD65         		BYTE	>B5,>09,>65,>96,>09,>65,>A4,>13
+FD6D         		BYTE	>6B,>01,>95,>09,>FF,>09,>EB,>61
+FD75         		BYTE	>29,>A4,>77,>37,>07,>07,>01,>95
+FD7D         		BYTE	>0E,>69,>2F,>AE,>65,>0F,>8B,>FF
+FD85         		BYTE	>33,>FF,>0A,>FF,>13,>EB,>09,>10
+FD8D         		BYTE	>0A,>25,>FF,>13,>EB,>09,>11,>14
+FD95         		BYTE	>FF,>13,>EB,>09,>11,>09,>FF,>13
+FD9D         		BYTE	>F7,>35,>FF,>13,>F7,>13,>10,>09
+FDA5         		BYTE	>FF,>13,>EB,>13,>63,>A8,>77,>37
+FDAD         		BYTE	>02,>A9,>FF,>23,>0F,>FF,>09,>ED
+FDB5         		BYTE	>6B,>90,>09,>FF,>2E,>07,>EB,>FF
+FDBD         		BYTE	>13,>F7,>FF,>77,>B7
+			; Rules for 'T'
+FDC2         	RULEST	BYTE	>FF,>07,>33,>42,>91,>63,>A8,>42
+FDCA         		BYTE	>B2,>13,>FF,>13,>42,>0D,>93,>13
+FDD2         		BYTE	>68,>A5,>13,>09,>52,>93,>13,>68
+FDDA         		BYTE	>A5,>13,>52,>8F,>EF,>13,>42,>0D
+FDE2         		BYTE	>9F,>6F,>24,>21,>B9,>42,>0D,>1F
+FDEA         		BYTE	>21,>94,>68,>A1,>0E,>13,>52,>9A
+FDF2         		BYTE	>13,>68,>29,>B3,>13,>52,>0C,>37
+FDFA         		BYTE	>B7,>13,>68,>25,>B9,>52,>94,>13
+FE02         		BYTE	>68,>25,>32,>A5,>52,>AF,>13,>68
+FE0A         		BYTE	>25,>B2,>5D,>B3,>68,>25,>B2,>76
+FE12         		BYTE	>B3,>68,>25,>29,>B2,>52,>AF,>13
+FE1A         		BYTE	>68,>25,>AD,>10,>52,>07,>90,>68
+FE22         		BYTE	>25,>33,>A5,>13,>52,>13,>AB,>13
+FE2A         		BYTE	>68,>25,>AE,>52,>07,>8B,>68,>32
+FE32         		BYTE	>2F,>35,>27,>A8,>13,>5D,>27,>9F
+FE3A         		BYTE	>68,>2F,>33,>A5,>52,>35,>B7,>68
+FE42         		BYTE	>2F,>35,>27,>A8,>13,>52,>B5,>13
+FE4A         		BYTE	>68,>35,>B3,>52,>0F,>37,>B7,>68
+FE52         		BYTE	>A5,>13,>D2,>E8,>DD,>09,>10,>65
+FE5A         		BYTE	>A4,>13,>42,>0D,>0C,>01,>95,>33
+FE62         		BYTE	>E9,>09,>2E,>42,>B2,>E9,>2F,>E5
+FE6A         		BYTE	>E9,>21,>E5,>69,>25,>AE,>65,>0F
+FE72         		BYTE	>8B,>75,>B2,>09,>42,>32,>B3,>F5
+FE7A         		BYTE	>21,>42,>32,>96,>13,>77,>AF,>42
+FE82         		BYTE	>0D,>9F,>FF,>34,>FF,>FF,>33,>42
+FE8A         		BYTE	>91,>FF,>42,>8D
+			; Rules for 'U'
+FE8E         	RULESU	BYTE	>13,>FF,>13,>71,>9F,>EE,>29,>59
+FE96         		BYTE	>16,>8B,>13,>EE,>4F,>8B,>13,>70
+FE9E         		BYTE	>2F,>AE,>4F,>02,>09,>18,>8B,>0D
+FEA6         		BYTE	>F2,>09,>56,>B3,>F2,>09,>71,>16
+FEAE         		BYTE	>B3,>F2,>11,>F3,>FF,>0E,>13,>CF
+FEB6         		BYTE	>FF,>0E,>0E,>CF,>F9,>C6,>13,>27
+FEBE         		BYTE	>FF,>09,>FF,>27,>FF,>0B,>FF,>27
+FEC6         		BYTE	>FF,>09,>EE,>0D,>FF,>DF,>FF,>71
+FECE         		BYTE	>96
+			; Rules for 'V'
+FECF         	RULESV	BYTE	>13,>FF,>13,>63,>93,>69,>25,>B7
+FED7         		BYTE	>63,>31,>9F,>FF,>E3
+			; Rules for 'W'
+FEDC         	RULESW	BYTE	>13,>FF,>13,>41,>21,>0F,>01,>3F
+FEE4         		BYTE	>3E,>31,>96,>13,>65,>32,>A5,>6E
+FEEC         		BYTE	>B4,>13,>61,>B3,>13,>6E,>0F,>AB
+FEF4         		BYTE	>E1,>33,>6E,>98,>E1,>34,>6E,>17
+FEFC         		BYTE	>97,>61,>AE,>6E,>18,>8B,>68,>25
+FF04         		BYTE	>32,>A5,>70,>AF,>68,>21,>B4,>70
+FF0C         		BYTE	>18,>02,>8D,>68,>2F,>AC,>79,>35
+FF14         		BYTE	>AD,>68,>AF,>79,>9F,>EF,>2D,>6E
+FF1C         		BYTE	>8F,>E8,>F0,>61,>B2,>6E,>BA,>6F
+FF24         		BYTE	>B2,>0E,>6E,>B3,>F2,>CE,>FF,>EE
+			; Rules for 'X'
+FF2C         	RULESX	BYTE	>13,>FF,>13,>47,>02,>29,>B7,>13
+FF34         		BYTE	>FF,>EB,>FF,>42,>29,>B7
+			; Rules for 'Y'
+FF3A         	RULESY	BYTE	>6F,>35,>B2,>59,>BA,>13,>FF,>13
+FF42         		BYTE	>6E,>86,>6F,>35,>2E,>A7,>59,>0F
+FF4A         		BYTE	>AC,>13,>6F,>B5,>59,>9F,>65,>21
+FF52         		BYTE	>B2,>10,>59,>BC,>13,>65,>B3,>59
+FF5A         		BYTE	>07,>37,>B7,>13,>FF,>D9,>09,>11
+FF62         		BYTE	>FF,>13,>D3,>09,>11,>FF,>29,>D3
+FF6A         		BYTE	>13,>10,>FF,>13,>C6,>13,>10,>FF
+FF72         		BYTE	>09,>C6,>13,>10,>FF,>0E,>0F,>10
+FF7A         		BYTE	>09,>CC,>13,>10,>FF,>0E,>09,>C6
+FF82         		BYTE	>FF,>CC
+			; Rules for 'Z'
+FF84         	RULESZ	BYTE	>13,>FF,>13,>6B,>93,>FF,>3A,>FF
+FF8C         		BYTE	>FF,>EB
+			; Rules for digits
+FF8E         	RULNUM	BYTE	>D0,>6B,>3C,>B5,>D1,>6E,>0F,>0F
+FF96         		BYTE	>8B,>D2,>42,>0D,>9F,>D3,>5D,>0E
+FF9E         		BYTE	>93,>D4,>68,>BA,>D5,>68,>06,>A3
+FFA6         		BYTE	>D6,>77,>37,>0C,>02,>29,>B7,>D7
+FFAE         		BYTE	>77,>37,>07,>23,>0C,>8B,>D8,>54
+FFB6         		BYTE	>02,>8D,>D9,>78,>06,>8B
+			; Index of rules tables
+FFBC         	TABRUL	DATA	RLPNCT
+FFBC         	TABRU1	EQU	$-1
+FFBE         		DATA	RULESA,RULESB,RULESC,RULESD
+FFC6         		DATA	RULESE,RULESF,RULESG,RULESH
+FFCE         		DATA	RULESI,RULESJ,RULESK,RULESL
+FFD6         		DATA	RULESM,RULESN,RULESO,RULESP
+FFDE         		DATA	RULESQ,RULESR,RULESS,RULEST
+FFE6         		DATA	RULESU,RULESV,RULESW,RULESX
+FFEE         		DATA	RULESY,RULESZ,RULNUM,LFFFF
+FFF6         		DATA	INT4,INT3,LFFFF,INT1
+FFFE         		DATA	START
+FFFE         	LFFFF	EQU	$-1
+
+
+F000         		END	START
+

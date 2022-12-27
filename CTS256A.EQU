@@ -1,0 +1,285 @@
+; Registers:
+;	R2:3	Pointer used when R10 == xxxx x01x - Input buffer read ptr
+;	R4:5	Pointer used when R10 == xxxx x00x - Input buffer write ptr
+;	R6:7	Pointer used when R10 == xxxx x11x - Output buffer read ptr
+;	R8:9	Pointer used when R10 == xxxx x10x - Output buffer write ptr
+;	R10	Flags
+;		7 (80)	0=serial mode - 1=parallel mode
+;		6 (40)	0=read input using R2:3 - 1=read input using R16:17
+;			maybe scan direction, depending if checking LHS(1) or RHS(0) pattern
+;		5 (20)	0=non letters rules - 1=letters rules
+;		4 (10)	1=rule pattern match failed?
+;		3 (08)
+;		2 (04)	0=input buffer - 1=output buffer
+;		1 (02)	0=write in buffer - 1=read in buffer
+;		0 (01)	1=bit 7 from byte read from in buffer
+;	R11	Flags
+;		7 (80)	1=bit 7 from byte read from in buffer (in rules processing)
+;		6 (40)
+;		5 (20)	1=input buffer full
+;		4 (10)	1 to exit Idle loop
+;		3 (08)	1 if output buffer full or above high water mark
+;		2 (04)	1 if input buffer above high water mark
+;		1 (02)	inc R55 if 0; don't enter idle loop if 1 (TODO: clarify)
+;		0 (01)	1=any delimiter - 0=delimiter is CR only
+;	R12:13	Temp Pointer
+;	R14:15	Save input buffer read ptr
+;	R16:17	Alternate input pointer for LHS rule patterns checking
+;	R20:21	Rule pointer
+;	R22	Char code in range 00-3F
+;	R23
+;	R25:25	Last delimiter pointer
+;	R26:27
+;	R28:29
+;	R30:31	Input buffer size / 2
+;	R32:33	Input buffer size / 8
+;	R34:35	Input buffer start - 1
+;	R36:37	Input buffer end
+;	R38:39	End RAM address + 1
+;	R40:41	Input buffer start
+;	R42:43	Output buffer start = Input buffer end + 1
+;	R44:45
+;	R46:47	Parallel input address
+;	R50	Output buffer high water mark ?
+;		$DF=223 in external RAM mode - $01 in internal RAM mode
+;	R51:52	Input buffer free size
+;	R53	Output buffer free size
+;	R54	Output buffer counter ?
+;	R55	Characters to free?
+;	R56:57	Number of bytes in input buffer ?
+
+; Peripherals:
+;	P0	IOCNT0	(in/out) (4: INT3en)
+;		7 (80)	Memory Mode 1 - 00=Single chip - 01=Peripheral Expansion
+;		6 (40)	Memory Mode 0 - 10=Full Expansion - 11=Undefined
+;		5 (20)	INT3* Flag/Clear
+;		4 (10)	INT3* Enable
+;		3 (08)	INT2 Flag/Clear
+;		2 (04)	INT2 Enable
+;		1 (02)	INT1* Flag/Clear
+;		0 (01)	INT1* Enable
+;	P4	APORT	(in)
+;		7 (80)	Delimiter: 0=CR - 1=any
+;		6 (40)	SCLK
+;		5 (20)	RXD
+;		4 (10)	RAM buffers: 0:internal(20in/26out) - 1:external(1792in/256out)
+;		3 (08)	serial cfg: 0:7N2  - 1:selectable
+;		2 (04)	m0 +	000:paral  - 001:50bd   - 010:110bd
+;		1 (02)	m1 |==> 011:300bd  - 100:1200bd - 101:2400bd
+;		0 (01)	m2 +    110:4800bd - 111:9600bd
+;	P6	BPORT	(out) Port B data := xxxx xxxI (DSR/BUSY)
+;		7 (80)	CLKOUT
+;		6 (40)	ENABLE*
+;		5 (20)	R/W*
+;		4 (10)	ALATCH
+;		3 (08)	TXD
+;		2 (04)
+;		1 (02)
+;		0 (01)	DSR/BUSY
+;	P8	CPORT	(in/out) Data bus
+;		7 (80)
+;		6 (40)
+;		5 (20)
+;		4 (10)
+;		3 (08)
+;		2 (04)
+;		1 (02)
+;		0 (01)
+;	P10	DPORT
+;		7 (80)
+;		6 (40)
+;		5 (20)
+;		4 (10)
+;		3 (08)
+;		2 (04)	RAM page A10
+;		1 (02)	RAM page A9
+;		0 (01)	RAM page A8
+;	P16	IOCNT1	(in/out) (0: INT4en)
+;		7 (80)	X
+;		6 (40)	X
+;		5 (20)	X
+;		4 (10)	X
+;		3 (08)	INT5 Flag/Clear
+;		2 (04)	INT5 Enable
+;		1 (02)	INT4 Flag/Clear
+;		0 (01)	INT4 Enable
+;	P17	SMODE	(out) UART Parameters (on 1st write)
+;		7 (80)	STOP	0=1 stop bit - 1=2 stop bits
+;		6 (40)	SIO	0=Serial I/O mode - *1=comms mode
+;		5 (20)	PEVEN	0=odd parity - 1=even parity
+;		4 (10)	PEN	0=no parity - 1=parity
+;		3 (08)	CHAR1	00=5 bits - 01=6 bits - *10=7 bits - 11=8 bits
+;		2 (04)	CHAR0	:
+;		1 (02)	COMM	0=Isosync - *1=async
+;		0 (01)	MULTI	0=Motorola protocol - *1=Intel protocol
+;		SCTL0	(out) 	Serial port control register 0 (on subsequent writes)
+;		7 (80)	SPH	1=Serial fully halted during IDLE
+;		6 (40)	UR	0=Serial port enable - 1=reset serial port (reactivates SMODE)
+;		5 (20)	X
+;		4 (10)	ER(out)	0=don't reset flags - 1=reset error flags
+;		3 (08)	X
+;		2 (04)	RXEN	1=receiver enabled, A5=RX input
+;		1 (02)	X
+;		0 (01)	TXEN	1=transmitter enabled, B3=TX output
+;		SSTAT	(in) 	Serial port status register
+;		7 (80)	X
+;		6 (40)	BFKDT	1=Break detected
+;		5 (20)	FE	1=Framing error
+;		4 (10)	OE	1=Overrun error
+;		3 (08)	PE	1=Parity error (if PEN=1)
+;		2 (04)	TXE	1=Transmitter empty
+;		1 (02)	RXRDY	1=RXBUF ready with new character
+;		0 (01)	TXRDY	1=TXBUF ready for character
+;	P20	T3DATA	Serial port timer reload value
+;	P21	SCTL1	Serial port control register 1
+;	P22	RXBUF	(in) Serial rx buffer
+;	P23	TXBUF	(out) := P6.0 ? 0001 1011 (XON) : 0001 1101 (XOFF)
+; Memory Map:
+;	0200	Parallel data (in)
+;	1000	UART Parameters (in) - *: values that should be used in all cases
+;		7 (80)	STOP	0=1 stop bit - 1=2 stop bits
+;		6 (40)	SIO	0=Serial I/O mode - *1=comms mode
+;		5 (20)	PEVEN	0=odd parity - 1=even parity
+;		4 (10)	PEN	0=no parity - 1=parity
+;		3 (08)	CHAR1	00=5 bits - 01=6 bits - *10=7 bits - 11=8 bits
+;		2 (04)	CHAR0	:
+;		1 (02)	COMM	0=Isosync - *1=async
+;		0 (01)	MULTI	0=Motorola protocol - *1=Intel protocol
+;	2000	SP0256 (out)
+;	3000	RAM (in/out)
+; Interrupts:
+;	INT1	Signal from SP0256
+;	INT3	Parallel data strobe
+;	INT4	Serial RX/TX/Timer3
+; Serial port control register/timer register
+; 	SCTL1	Serial Control register
+;		7 (80)	T3RUN	0=Stop Timer3 - 1=Start Timer3
+;		6 (40)	CLK	*1=Internal from Timer3 - 0=External SCLK pin
+;		5 (20)	SLEEP	*0
+;		4 (10)	WU	*0
+;		3 (08)	T3FLG	*0
+;		2 (04)	T3ENB	*0=Disable INT4 from T3 - 1=Enable
+;		1 (02)	b1 = prescaler
+;		0 (01)	b0 :
+;	T3DATA	Timer reload value (00-FF)
+;
+;	Bits	000	100	010	110	001	101	011	111
+;	Bauds	Paral	1200	110	4800	50	2400	300	9600
+;	SCTL1	FF	40	43	40	43	40	40	40
+;	T3DATA	FF	20	57	07	C2	0F	81	03
+
+START	EQU	0F000H		; Main entry point
+SER7N2	EQU	0F027H		; P17 = SMODE := Fixed Serial 7N2 config
+SERSEL	EQU	0F02AH		; Serial selectable config
+SCT1TB	EQU	0F03EH		; Table of values for SCTL1
+T3DATB	EQU	0F046H		; Table of timer3 reload values T3DATA
+PARALL	EQU	0F04EH		; Start in parallel mode
+INIRAM	EQU	0F058H		; Init RAM config
+INTRAM	EQU	0F0B9H		; init internal RAM pointers
+INIROM	EQU	0F0D6H		; Init EPROM
+STAROM	EQU	0F0F3H		; Boot in EPROM
+INITOK	EQU	0F0FAH		; Done peripherals init
+POLL	EQU	0F105H		; Polling loop
+WTIDLE	EQU	0F10CH		; Idle loop (wait interrupt?)
+ENDPOL	EQU	0F11CH		; Exit polling loop
+W11B3	EQU	0F12FH		; wait reset of bit 3 of R11
+CLBUF1	EQU	0F140H
+INIPTR	EQU	0F143H		; Init buffer pointers and regs
+STROK	EQU	0F1A8H		; "O-K\n"
+SAYOK	EQU	0F1ACH		; Say O.K.
+INT4	EQU	0F1BCH		; INT4 handler (serial interrupt)
+INT3	EQU	0F1C1H		; INT3 handler (parallel interrupt)
+WRXRDY	EQU	0F1C9H		; wait RXBUF ready with new character
+STINPB	EQU	0F1E2H		; Store char in input buffer
+CLBUF	EQU	0F1F0H		; clear buffers - reinit
+NOTESC	EQU	0F204H		; Not <ESC>
+NOTCTR	EQU	0F221H		; Not <Ctrl-R>
+NOTBKS	EQU	0F248H		; Not <BkSp>
+DELIMT	EQU	0F25CH		; Delimiter (not letter/digit/')
+STOCHR	EQU	0F272H		; put char in buffer
+XSTINP	EQU	0F284H		; exit handler
+ENINT	EQU	0F28CH		; enable parallel or serial interrupt
+ENINT4	EQU	0F294H		; enable INT4
+RWBUFR	EQU	0F298H		; read/write in input/output buffer
+WROBUF	EQU	0F2A7H		; Write to output buffer
+WRBUF	EQU	0F2ACH
+WRBUFX	EQU	0F2C1H
+WOBUFX	EQU	0F2C5H
+RDBUF	EQU	0F2CAH		; read from input or output buffer
+RDOBUF	EQU	0F2D9H		; read from output buffer
+RDBUF1	EQU	0F2E2H		; Read byte from buffer
+ROBUFX	EQU	0F309H
+ROLR13	EQU	0F311H		; Roll R12:R13 according to active buffer (R10.2)
+ROLINP	EQU	0F315H		; Roll input buffer
+ROLOUT	EQU	0F323H		; Roll output buffer
+CHKBUF	EQU	0F331H		; Check if inp or out buffer full or above HWM
+CKOBUF	EQU	0F335H		; Check if output buffer full or above high water mark
+CKIBUF	EQU	0F347H		; Check if input buffer full or above high water mark
+TXOFF	EQU	0F371H		; Send XOFF, clear DTR/BUSY*
+TXON	EQU	0F378H		; Send XON, set DTR/BUSY*
+INT1	EQU	0F385H		; INT1 handler (SP0256)
+SELRUL	EQU	0F3AFH		; select rules set
+ENCODE	EQU	0F3E7H		; Encode text to allophones
+LSEEKB	EQU	0F47EH		; left seek '['
+RSEEKB	EQU	0F488H		; right seek Bth '['
+WRALLO	EQU	0F49EH		; Write allophones
+CMPBKT	EQU	0F4C2H		; compare in-brackets
+GFLAGS	EQU	0F514H		; Get letter flags
+GFLAGX	EQU	0F524H
+LTFLGS	EQU	0F526H		; Letter flags
+PATBRT	EQU	0F540H		; Pattern jump table
+CHKPAT	EQU	0F564H		; Check rule pattern
+PATFLD	EQU	0F59AH		; pattern match failed
+PATNLT	EQU	0F5B0H		; <	13	Anything other than a letter
+PAT1MC	EQU	0F5B9H		; *	11	1+ consonants
+PAT2MV	EQU	0F5CCH		; ?	14	2+ vowels
+PAT0MC	EQU	0F5EAH		; :	10	0+ consonants
+PATOK1	EQU	0F5FEH		; pattern match ok
+PATSUF	EQU	0F601H		; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+PATFL1	EQU	0F689H		; pattern match failed
+CHKLTR	EQU	0F68CH		; Test if next input char is a letter, R10.5=1 if yes
+PATVOW	EQU	0F69EH		; #	09	1+ vowels
+PATVOC	EQU	0F6B4H		; .	0A	voiced consonant: B D G J L M N R V W X
+PATOK2	EQU	0F6BCH
+PAT1CO	EQU	0F6BFH		; ^	0E	1 consonant only
+PATFVO	EQU	0F6C7H		; +	0F	front vowel: E I Y
+PATBVO	EQU	0F6CFH		; >	12	back vowel: O U
+PATSIB	EQU	0F6D7H		; &	0C	sibilant: S C G Z X J CH SH
+PATPLU	EQU	0F6E2H		; @	0D	T S R D L Z N J TH CH SH preceding long U
+FETCH	EQU	0F70FH		; Fetch char and mask high bit
+INCR17	EQU	0F71BH		; inc R16:17 and roll if needed
+INCR3	EQU	0F72BH		; inc R2:3 and roll if needed
+DECR3	EQU	0F73BH		; dec R2:3 and roll if needed
+DECR17	EQU	0F74BH		; dec R16:17 and roll if needed
+GNEXT	EQU	0F75BH		; get next char and move code to range 00-3F
+UNGET	EQU	0F77FH		; Unget last input character
+RLPNCT	EQU	0F78CH		; Rules for punctuation
+RULESA	EQU	0F7CCH		; Rules for 'A'
+RULESB	EQU	0F882H		; Rules for 'B'
+RULESC	EQU	0F8CCH		; Rules for 'C'
+RULESD	EQU	0F919H		; Rules for 'D'
+RULESE	EQU	0F976H		; Rules for 'E'
+RULESF	EQU	0FA30H		; Rules for 'F'
+RULESG	EQU	0FA44H		; Rules for 'G'
+RULESH	EQU	0FA8AH		; Rules for 'H'
+RULESI	EQU	0FAB4H		; Rules for 'I'
+RULESJ	EQU	0FB4CH		; Rules for 'J'
+RULESK	EQU	0FB55H		; Rules for 'K'
+RULESL	EQU	0FB66H		; Rules for 'L'
+RULESM	EQU	0FB87H		; Rules for 'M'
+RULESN	EQU	0FB99H		; Rules for 'N'
+RULESO	EQU	0FBDFH		; Rules for 'O'
+RULESP	EQU	0FCE1H		; Rules for 'P'
+RULESQ	EQU	0FD0DH		; Rules for 'Q'
+RULESR	EQU	0FD29H		; Rules for 'R'
+RULESS	EQU	0FD3DH		; Rules for 'S'
+RULEST	EQU	0FDC2H		; Rules for 'T'
+RULESU	EQU	0FE8EH		; Rules for 'U'
+RULESV	EQU	0FECFH		; Rules for 'V'
+RULESW	EQU	0FEDCH		; Rules for 'W'
+RULESX	EQU	0FF2CH		; Rules for 'X'
+RULESY	EQU	0FF3AH		; Rules for 'Y'
+RULESZ	EQU	0FF84H		; Rules for 'Z'
+RULNUM	EQU	0FF8EH		; Rules for digits
+TABRUL	EQU	0FFBCH		; Index of rules tables
+TABRU1	EQU	0FFBDH		; Index of rules tables LSB

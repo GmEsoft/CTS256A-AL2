@@ -1,0 +1,7 @@
+!F000-		; Code origin
+%F03E-F04D	; Serial port constants
+$F1A8-F1AA	; Text O-K
+%F1AB		; '\n'
+%F526-F53F	; Letters flags
+%F78B-		; Rules
+#FFBC-		; Rules indexes and vectors
