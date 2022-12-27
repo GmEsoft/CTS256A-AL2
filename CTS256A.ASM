@@ -794,7 +794,7 @@ GFLAGX	CLR	A
 	; Letter flags
 	; ------------
 	; 7(80): Vowel
-	; 6(40): Voiced consonant ('C'? - not in CTS256)
+	; 6(40): Voiced consonant
 	; 5(20): Sibilant
 	; 4(10): Preceding long U
 	; 3(08): Consonant
