@@ -495,10 +495,10 @@ CKOBUF	CMP	%>01,R53	; Only 1 free byte in output buffer ?
 	JZ	LF343		; jump if yes
 	CMP	R50,R54		; R54>R50 ? (output counter >= HWM ?)
 	JP	LF343		; jump if yes
-	OR	%>08,R11	; set R11.3 (output buffer not full)
+	OR	%>08,R11	; set R11.3 (output buffer full)
 	RETS
 
-LF343	AND	%>F7,R11	; reset R11.3 (output buffer full)
+LF343	AND	%>F7,R11	; reset R11.3 (output buffer not full)
 	RETS
 
 	; Check if input buffer full or above high water mark
@@ -612,7 +612,7 @@ LF3F4	CALL	@FETCH		; Fetch char and mask high bit
 
 LF400	AND	%>7F,R11
 LF403	CALL	@SELRUL		; select rules set
-	BTJZ	%>20,R10,LF41B	; R10.5 set (rules for letters) ? jump if yes
+	BTJZ	%>20,R10,LF41B	; R10.5 set (rules for letters) ? jump if no
 
 	CLR	B		; useful?
 	SUB	%>41,A		; A -= 'A'
@@ -656,7 +656,7 @@ LF420	CALL	@CMPBKT		; compare in-brackets
 	CALL	@WRALLO		; Write allophones
 
 	; Next input character
-	MOVD	R15,R3		; R2:23 := R14:15 - restore input buffer read ptr
+	MOVD	R15,R3		; R2:3 := R14:15 - restore input buffer read ptr
 	MOVD	R3,R17		; R16:17 := R2:3 - copy to backward input buffer read ptr
 	CALL	@DECR17		; dec R16:17 and roll to R36:37 if == R34:35
 	BTJZ	%>80,R11,LF3F4	; High bit of char was set (final?) ? Jump if not
@@ -679,7 +679,7 @@ LF46F	CALL	@RSEEKB		; right seek 2nd or 3rd '[' => next pattern '['
 	JMP	LF420		; check next rule
 
 	; Match failed before opening [ => seek next rule
-LF47A	MOV	%>03,B		; B := 2 (number of '[') to seek
+LF47A	MOV	%>03,B		; B := 3 (number of '[') to seek
 	JMP	LF46F		; right seek 3rd '[' and check next rule
 
 ;==============================================================================
