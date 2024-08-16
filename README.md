@@ -48,3 +48,8 @@ recognized by the encoding routine in the ROM. I suspect that the rule `[I]$% = 
 	#*[I]^+ = [IH]
 	````
 
+### Credits
+
+Frank Palazzolo, who designed an extractor to dump the masked ROMs of TMS7000-based devices, and published
+the ROM binary image `cts256a.bin`: https://github.com/palazzol/TMS7xxx_dumper
+
