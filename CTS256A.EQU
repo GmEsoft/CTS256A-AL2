@@ -168,6 +168,10 @@
 ;	SCTL1	FF	40	43	40	43	40	40	40
 ;	T3DATA	FF	20	57	07	C2	0F	81	03
 
+PARLINP	EQU	00200H		; Memory-mapped parallel input from Host
+SP0256	EQU	02000H		; Memory-mapped parallel output to SP0256A-AL2
+CTSXRAM	EQU	03000H		; CTS-256A External RAM origin
+
 START	EQU	0F000H		; Main entry point
 SER7N2	EQU	0F027H		; P17 = SMODE := Fixed Serial 7N2 config
 SERSEL	EQU	0F02AH		; Serial selectable config
@@ -175,6 +179,8 @@ SCT1TB	EQU	0F03EH		; Table of values for SCTL1
 T3DATB	EQU	0F046H		; Table of timer3 reload values T3DATA
 PARALL	EQU	0F04EH		; Start in parallel mode
 INIRAM	EQU	0F058H		; Init RAM config
+IRAML0	EQU	0F076H		; External RAM sizing loop
+IRAMX0	EQU	0F09BH		; Exit external RAM sizing loop
 INTRAM	EQU	0F0B9H		; init internal RAM pointers
 INIROM	EQU	0F0D6H		; Init EPROM
 STAROM	EQU	0F0F3H		; Boot in EPROM
@@ -213,8 +219,8 @@ ROLR13	EQU	0F311H		; Roll R12:R13 according to active buffer (R10.2)
 ROLINP	EQU	0F315H		; Roll input buffer
 ROLOUT	EQU	0F323H		; Roll output buffer
 CHKBUF	EQU	0F331H		; Check if inp or out buffer full or above HWM
-CKOBUF	EQU	0F335H		; Check if output buffer full or above high water mark
-CKIBUF	EQU	0F347H		; Check if input buffer full or above high water mark
+CKOBUF	EQU	0F335H		; Check if output buffer full or above HWM
+CKIBUF	EQU	0F347H		; Check if input buffer full or above HWM
 TXOFF	EQU	0F371H		; Send XOFF, clear DTR/BUSY*
 TXON	EQU	0F378H		; Send XON, set DTR/BUSY*
 INT1	EQU	0F385H		; INT1 handler (SP0256)

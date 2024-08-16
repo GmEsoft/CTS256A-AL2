@@ -16,6 +16,8 @@ Patterns:
 >	12	back vowel: O U
 <	13	anything other than a letter
 ?	14	two or more vowels
+$	1F	Not a pattern symbol, ignored by the ROM
+		Should probably be a D: [I]D% = [AY] instead of [I]$% = [AY]
 
 
 == [ : ] ==
@@ -224,7 +226,7 @@ FAF9:	[I]^% = [AY]
 FAFD:	[I]^+:# = [IH]
 FB03:	[IZ]% = [AY ZZ]
 FB07:	[IS]% = [AY ZZ]
-FB0B:	[I]{1F}% = [AY]
+FB0B:	[I]$% = [AY]		; Maybe [I]D% = [AY]
 FB0F:	+^[I]^+ = [IH]
 FB15:	[I]T% = [AY]
 FB19:	#*[I]^+ = [IH]

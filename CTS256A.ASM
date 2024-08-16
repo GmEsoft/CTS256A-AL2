@@ -2,9 +2,9 @@
 ;
 ;	Tue Dec 27 08:39:46 2022
 ;
-;	Disassembly of : cts256a.bin
-;	Equates file   : cts256A.equ
-;	Screening file : cts256A.scr
+;	Disassembly of : CTS256A.BIN
+;	Equates file   : CTS256A.EQU
+;	Screening file : CTS256A.SCR
 
 
 ;==============================================================================
@@ -14,9 +14,9 @@
 ;==============================================================================
 
 	; Main entry point
-START	MOV	%>3A,B
+CTS256	MOV	%>3A,B
 	LDSP			; Init stack pointer 3B-XX
-	MOVD	%>2000,R45	; R45 := $2000
+	MOVD	%SP0256,R45	; R45 := $2000 - Memory-mapped parallel output to SP0256A-AL2
 	MOVP	%>AA,P0		; P0 = IOCNT0 := 1010 1010
 				; 	Full Expansion;
 				;	Clear INT1, INT2 and INT3 flags
@@ -62,7 +62,7 @@ T3DATB	BYTE	>FF,>20,>57,>07,>C2,>0F,>81,>03
 
 	; Start in parallel mode
 PARALL	OR	%>80,R10	; Set R10.7, indicating parallel mode
-	MOVD	%>0200,R47	; R47 := $0200 parallel input mapped address
+	MOVD	%PARLINP,R47	; R47 := $0200 parallel input mapped address
 	ORP	%>30,P0		; P0 = IOCNT0, set .4=enable INT3, .5=clear INT3
 	; Init RAM config
 INIRAM	MOVP	P4,B		; B := P4 = APORT
@@ -70,7 +70,8 @@ INIRAM	MOVP	P4,B		; B := P4 = APORT
 	CMP	%>00,B		; useful ?
 	; jump if internal
 	JZ	INTRAM		; init internal RAM pointers
-	MOVD	%>3000,R3	; R2:3 := base RAM address = $3000
+
+	MOVD	%CTSXRAM,R3	; R2:3 := base RAM address = $3000
 	MOVD	R3,R41		; R40:41 := R2:3
 	PUSH	R2
 	DEC	R2
@@ -78,34 +79,35 @@ INIRAM	MOVP	P4,B		; B := P4 = APORT
 	MOV	%>FF,R35
 	ADD	%>02,R2		; R2 += 2 ($31)
 	CLR	R23		; R23 := 0 (page counter)
+	; Init external RAM sizing loop
 
-LF076	INC	R2		; ++R2
+IRAML0	INC	R2		; ++R2
 	CMP	%>F0,R2		; R2 == $F0 ($F000 reached) ?
 	; Exit loop if yes
-	JZ	LF09B
+	JZ	IRAMX0
 	INC	R23		; ++R23
 	CMP	%>10,R23	; R23 == $10 (16 pages) ?
 	; exit loop if yes
-	JZ	LF09B
+	JZ	IRAMX0
 	MOV	%>5A,A		; A := $5A (RAM test pattern)
 	STA	*R3		; *R2:3 := A
 	CLR	A		; A := 0 (useful?)
 	LDA	*R3		; A := *R2:3
 	CMP	%>5A,A		; A == $5A (test pattern) ?
 	; exit loop if not
-	JNZ	LF09B
+	JNZ	IRAMX0
 	SWAP	A		; A := $A5 (reverse bits)
 	STA	*R3		; *R2:3 := A
 	CLR	A		; A := 0 (useful?)
 	LDA	*R3		; A := *R2:3
 	CMP	%>A5,A		; A == $A5 (test pattern) ?
 	; exit loop if not
-	JNZ	LF09B
+	JNZ	IRAMX0
 	; Test next RAM page
-	JMP	LF076
+	JMP	IRAML0
 
-LF09B	MOV	R2,R38		; R38:39 := R2:$00 (end RAM addr + 1)
-	CLR	R39
+IRAMX0	MOV	R2,R38		; R38:39 := R2:$00 (end RAM addr + 1)
+	CLR	R39		; ATTENTION: page boundary !!
 	SUB	%>01,R2		; --R2 (why not DEC R2?)
 	MOVD	R3,R7		; R6:7 := R2:3 = last RAM page addr (output buffer read ptr)
 	MOVD	R7,R43		; R42:43 := R6:R7 (output buffer start)
@@ -300,8 +302,8 @@ CLBUF	ANDP	%>FE,P0		; Disable INT1* (SP0256)
 	CALL	@INIPTR		; Init buffer pointers and regs
 	MOV	%>3A,B		; Init SP
 	LDSP			;
-	MOVD	R45,R27		; R26:27 := R44:45 (??)
-	STA	*R27		; *R26:27 := A (??)
+	MOVD	R45,R27		; R26:27 := R44:45  (SP0256 device)
+	STA	*R27		; *R26:27 := A  (SP0256 device)
 	CALL	@ENINT		; Enable input interrupt (parallel or serial)
 	BR	@POLL		; Polling loop
 
@@ -360,7 +362,7 @@ DELIMT	BTJO	%>01,R11,LF267	; R11.0 set (any delimiter) ? Jump if yes
 LF267	MOVD	R3,R25		; R24:25 := R2:3 (last delimiter position)
 LF26A	OR	%>80,A		; A.7 := 1 (set high bit)
 	INC	R57		; Increment R56:57 (# of bytes in input buffer)
-	JNC	STOCHR
+	JNC	STOCHR		; put char in buffer
 	INC	R56
 
 	; put char in buffer
@@ -548,7 +550,7 @@ INT1	ANDP	%>FE,P0		; Disable P0.0 = INT1*
 	CALL	@RWBUFR		; do the read
 	MOVD	R45,R27		; R26:27:= R44:45 SP0256 base address
 	ADD	R0,R27		; Add allophone code to the address
-	STA	*R27		; Write byte to that address (value doesn't care)
+	STA	*R27		; Write any byte to that address (value doesn't care)
 	POP	R13		; restore regs
 	POP	R12
 	POP	R10
@@ -564,7 +566,7 @@ LF3AE	RETI			; return from interrupt
 	; select rules set
 SELRUL	CMP	%>30,A
 	JPZ	LF3B5
-	JMP	LF3DF
+	JMP	LF3DF		; < '0' => rules for punctuation
 
 LF3B5	CMP	%>3A,A
 	JPZ	LF3C1
@@ -621,7 +623,7 @@ LF403	CALL	@SELRUL		; select rules set
 	LDA	@TABRUL(B)	; Index of rules tables
 	MOV	A,R20		; R20 := MSB of letter rules table
 	LDA	@TABRU1(B)	; Index of rules tables LSB
-	MOV	A,R21		; R22 := LSB of letter rules table
+	MOV	A,R21		; R21 := LSB of letter rules table
 
 LF41B	MOV	%>01,B		; B := 1 (number of '[') to seek
 	CALL	@RSEEKB		; right seek 1st '['
@@ -1506,17 +1508,20 @@ TABRU1	EQU	$-1
 	DATA	RULESM,RULESN,RULESO,RULESP
 	DATA	RULESQ,RULESR,RULESS,RULEST
 	DATA	RULESU,RULESV,RULESW,RULESX
-	DATA	RULESY,RULESZ,RULNUM,LFFFF
+	DATA	RULESY,RULESZ,RULNUM,>FFFF
 
 ;==============================================================================
 	; Interrupt vectors
-	DATA	INT4,INT3,LFFFF,INT1
-	DATA	START
-LFFFF	EQU	$-1
+	DATA	INT4,INT3,>FFFF,INT1
+	DATA	CTS256
 
 ;==============================================================================
+PARLINP	EQU	>0200		; Memory-mapped parallel input from Host
+SP0256	EQU	>2000		; Memory-mapped parallel output to SP0256A-AL2
+CTSXRAM	EQU	>3000		; CTS-256A External RAM origin
+;==============================================================================
 
-	END	START
+	END	CTS256
 
 ;==============================================================================
 

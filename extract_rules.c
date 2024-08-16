@@ -15,7 +15,7 @@
  3	WH	YY1	CH	ER1	ER2	OW	DH2	SS	NN2	HH2	OR	AR	YR	GG2	EL	BB2
 */
 
-char* allophones[] =
+const char* allophones[] =
 {
 	"PA1",	"PA2",	"PA3",	"PA4",	"PA5",	"OY",	"AY",	"EH",
 	"KK3",	"PP",	"JH",	"NN1",	"IH",	"TT2",	"RR1",	"AX",
@@ -29,26 +29,28 @@ char* allophones[] =
 };
 
 /* Patterns:
-#	09	1+ vowels
-.	0A	voiced consonant: B D G J L M N R V W X
-%	0B	suffix: ER E ES ED ING ELY (FUL?)
-&	0C	sibilant: S C G Z X J CH SH
+#	09	One or more vowels
+.	0A	Voiced consonant: B D G J L M N R V W X
+%	0B	Suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+&	0C	Sibilant: S C G Z X J CH SH
 @	0D	T S R D L Z N J TH CH SH preceding long U
-^	0E	1 consonant
-+	0F	front vowel: E I Y
-:	10	0+ consonants
-*	11	1+ consonants
->	12	back vowel: O U
+^	0E	One consonant
++	0F	Front vowel: E I Y
+:	10	Zero or more consonants
+*	11	One or more consonants
+>	12	Back vowel: O U
 <	13	Anything other than a letter
-?	14	0+ vowels
+?	14	Two or more vowels
+$	1F	Not a pattern symbol, ignored by the ROM
+		Should probably be a D: [I]D% = [AY] instead of [I]$% = [AY]
 */
 
-char symbols[] =
+const char symbols[] =
 {
 	 0,		 0,		 0,		 0,		 0,		 0,		 0,		'\'',	// 00-07
 	 0,		'#',	'.',	'%',	'&',	'@',	'^',	'+',	// 08-0F
 	':',	'*',	'>',	'<',	'?',	 0,		 0,		 0,		// 10-17
-	 0,		 0,		 0,		 0,		 0,		 0,		 0,		 0,		// 18-1F
+	 0,		 0,		 0,		 0,		 0,		 0,		 0,		'$',	// 18-1F
 	 0,		'A',	'B',	'C',	'D',	'E',	'F',	'G',	// 20-27
 	'H',	'I',	'J',	'K',	'L',	'M',	'N',	'O',	// 28-2F
 	'P',	'Q',	'R',	'S',	'T',	'U',	'V',	'W',	// 30-37
@@ -57,7 +59,7 @@ char symbols[] =
 
 #define INDEX_SIZE 28
 
-char initials[INDEX_SIZE] =
+const char initials[INDEX_SIZE] =
 {
 	':', 	'A',	'B',	'C',	'D',	'E',	'F',	'G',
 	'H',	'I',	'J',	'K',	'L',	'M',	'N',	'O',
@@ -138,6 +140,8 @@ int main( int argc, char* argv[] )
 		">	12	back vowel: O U\n"
 		"<	13	anything other than a letter\n"
 		"?	14	two or more vowels\n"
+		"$	1F	Not a pattern symbol, ignored by the ROM\n"
+		"		Should probably be a D: [I]D% = [AY] instead of [I]$% = [AY]\n"
 		"\n"
 		, outfile );
 

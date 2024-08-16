@@ -1,18 +1,21 @@
-;** TMS-7000(tm) DISASSEMBLER V1.11 - (c) 2015-22 GmEsoft, All rights reserved. **
+;** TMS-7000(tm) DISASSEMBLER V1.40beta1 - (c) 2015-24 GmEsoft, All rights reserved. **
 ;
-;	Tue Dec 27 13:58:06 2022
+;	Sat Aug 10 21:10:43 2024
 ;
 ;	Disassembly of : CTS256A.BIN
 ;	Equates file   : CTS256A.EQU
 ;	Screening file : CTS256A.SCR
 
+0200         	PARLINP	EQU	>0200		; Memory-mapped parallel input from Host
+2000         	SP0256	EQU	>2000		; Memory-mapped parallel output to SP0256A-AL2
+3000         	CTSXRAM	EQU	>3000		; CTS-256A External RAM origin
 
 
 F000         		AORG	>F000
 			; Main entry point
 F000 523A    	START	MOV     %>3A,B                                  R:
 F002 0D      		LDSP                                            .
-F003 8820002D		MOVD    %>2000,R45                              ...-
+F003 8820002D		MOVD    %SP0256,R45     ; Memory-mapped parallel...-
 F007 A2AA00  		MOVP    %>AA,P0                                 ...
 F00A A20A10  		MOVP    %>0A,P16                                ...
 F00D 9104    		MOVP    P4,B                                    ..
@@ -48,14 +51,14 @@ F046         	T3DATB	BYTE	>FF,>20,>57,>07,>C2,>0F,>81,>03
 
 			; Start in parallel mode
 F04E 74800A  	PARALL	OR      %>80,R10                                t..
-F051 8802002F		MOVD    %>0200,R47                              .../
+F051 8802002F		MOVD    %PARLINP,R47    ; Memory-mapped parallel.../
 F055 A43000  		ORP     %>30,P0                                 .0.
 			; Init RAM config
 F058 9104    	INIRAM	MOVP    P4,B                                    ..
 F05A 5310    		AND     %>10,B                                  S.
 F05C 5D00    		CMP     %>00,B                                  ].
 F05E E259    		JZ      INTRAM          ; init internal RAM poin.Y
-F060 88300003		MOVD    %>3000,R3                               .0..
+F060 88300003		MOVD    %CTSXRAM,R3     ; CTS-256A External RAM .0..
 F064 980329  		MOVD    R3,R41                                  ..)
 F067 D802    		PUSH    R2                                      ..
 F069 D202    		DEC     R2                                      ..
@@ -63,27 +66,29 @@ F06B 420222  		MOV     R2,R34                                  B."
 F06E 72FF23  		MOV     %>FF,R35                                r.#
 F071 780202  		ADD     %>02,R2                                 x..
 F074 D517    		CLR     R23                                     ..
-F076 D302    	LF076	INC     R2                                      ..
+			; External RAM sizing loop
+F076 D302    	IRAML0	INC     R2                                      ..
 F078 7DF002  		CMP     %>F0,R2                                 }..
-F07B E21E    		JZ      LF09B                                   ..
+F07B E21E    		JZ      IRAMX0          ; Exit external RAM sizi..
 F07D D317    		INC     R23                                     ..
 F07F 7D1017  		CMP     %>10,R23                                }..
-F082 E217    		JZ      LF09B                                   ..
+F082 E217    		JZ      IRAMX0          ; Exit external RAM sizi..
 F084 225A    		MOV     %>5A,A                                  "Z
 F086 9B03    		STA     *R3                                     ..
 F088 B5      		CLR     A                                       .
 F089 9A03    		LDA     *R3                                     ..
 F08B 2D5A    		CMP     %>5A,A                                  -Z
-F08D E60C    		JNZ     LF09B                                   ..
+F08D E60C    		JNZ     IRAMX0          ; Exit external RAM sizi..
 F08F B7      		SWAP    A                                       .
 F090 9B03    		STA     *R3                                     ..
 F092 B5      		CLR     A                                       .
 F093 9A03    		LDA     *R3                                     ..
 F095 2DA5    		CMP     %>A5,A                                  -.
-F097 E602    		JNZ     LF09B                                   ..
-F099 E0DB    		JMP     LF076                                   ..
+F097 E602    		JNZ     IRAMX0          ; Exit external RAM sizi..
+F099 E0DB    		JMP     IRAML0          ; External RAM sizing lo..
 
-F09B 420226  	LF09B	MOV     R2,R38                                  B.&
+			; Exit external RAM sizing loop
+F09B 420226  	IRAMX0	MOV     R2,R38                                  B.&
 F09E D527    		CLR     R39                                     .'
 F0A0 7A0102  		SUB     %>01,R2                                 z..
 F0A3 980307  		MOVD    R3,R7                                   ...
@@ -412,7 +417,7 @@ F330 0A      	LF330	RETS                                            .
 
 			; Check if inp or out buffer full or above HWM
 F331 77040A12	CHKBUF	BTJZ    %>04,R10,CKIBUF ; Check if input buffer w...
-			; Check if output buffer full or above high water mark
+			; Check if output buffer full or above HWM
 F335 7D0135  	CKOBUF	CMP     %>01,R53                                }.5
 F338 E209    		JZ      LF343                                   ..
 F33A 4D3236  		CMP     R50,R54                                 M26
@@ -423,7 +428,7 @@ F342 0A      		RETS                                            .
 F343 73F70B  	LF343	AND     %>F7,R11                                s..
 F346 0A      		RETS                                            .
 
-			; Check if input buffer full or above high water mark
+			; Check if input buffer full or above HWM
 F347 7D0033  	CKIBUF	CMP     %>00,R51                                }.3
 F34A E40A    		JP      LF356                                   ..
 F34C 7D0134  		CMP     %>01,R52                                }.4
@@ -1310,3 +1315,232 @@ FFFE         	LFFFF	EQU	$-1
 
 F000         		END	START
 
+** Symbols Table **
+
+Name		Seg Flags Addr  Comment
+------------------------------------------------------------
+D0000           C   !+ =  0000  
+D000D           C   !+ =  000D  
+D0050           C   !+ =  0050  
+D0051           C   !+ =  0051  
+D0065           C   !+ =  0065  
+D0066           C   !+ =  0066  
+D0080           C   !+ =  0080  
+PARLINP         C   !  =  0200  ; Memory-mapped parallel input from Host
+D1000           C   !+ =  1000  
+SP0256          C   !  =  2000  ; Memory-mapped parallel output to SP0256A-AL2
+CTSXRAM         C   !  =  3000  ; CTS-256A External RAM origin
+START           C   !     F000  ; Main entry point
+SER7N2          C   !     F027  ; P17 = SMODE := Fixed Serial 7N2 config
+SERSEL          C   !     F02A  ; Serial selectable config
+SCT1TB          C   !     F03E  ; Table of values for SCTL1
+T3DATB          C   !     F046  ; Table of timer3 reload values T3DATA
+PARALL          C   !     F04E  ; Start in parallel mode
+INIRAM          C   !     F058  ; Init RAM config
+IRAML0          C   !     F076  ; External RAM sizing loop
+IRAMX0          C   !     F09B  ; Exit external RAM sizing loop
+INTRAM          C   !     F0B9  ; init internal RAM pointers
+INIROM          C   !     F0D6  ; Init EPROM
+LF0DA           C   !     F0DA  
+LF0E3           C   !     F0E3  
+STAROM          C   !     F0F3  ; Boot in EPROM
+INITOK          C   !     F0FA  ; Done peripherals init
+POLL            C   !     F105  ; Polling loop
+WTIDLE          C   !     F10C  ; Idle loop (wait interrupt?)
+LF110           C   !     F110  
+ENDPOL          C   !     F11C  ; Exit polling loop
+LF126           C   !     F126  
+W11B3           C   !     F12F  ; wait reset of bit 3 of R11
+LF133           C   !     F133  
+CLBUF1          C   !     F140  
+INIPTR          C   !     F143  ; Init buffer pointers and regs
+LF1A6           C   !     F1A6  
+STROK           C   !     F1A8  ; "O-K\n"
+SAYOK           C   !     F1AC  ; Say O.K.
+LF1B0           C   !     F1B0  
+INT4            C   !     F1BC  ; INT4 handler (serial interrupt)
+INT3            C   !     F1C1  ; INT3 handler (parallel interrupt)
+WRXRDY          C   !     F1C9  ; wait RXBUF ready with new character
+LF1D1           C   !     F1D1  
+LF1D6           C   !     F1D6  
+LF1E1           C   !     F1E1  
+STINPB          C   !     F1E2  ; Store char in input buffer
+CLBUF           C   !     F1F0  ; clear buffers - reinit
+NOTESC          C   !     F204  ; Not <ESC>
+LF21E           C   !     F21E  
+NOTCTR          C   !     F221  ; Not <Ctrl-R>
+LF22F           C   !     F22F  
+NOTBKS          C   !     F248  ; Not <BkSp>
+DELIMT          C   !     F25C  ; Delimiter (not letter/digit/')
+LF267           C   !     F267  
+LF26A           C   !     F26A  
+STOCHR          C   !     F272  ; put char in buffer
+LF281           C   !     F281  
+XSTINP          C   !     F284  ; exit handler
+ENINT           C   !     F28C  ; enable parallel or serial interrupt
+ENINT4          C   !     F294  ; enable INT4
+RWBUFR          C   !     F298  ; read/write in input/output buffer
+WROBUF          C   !     F2A7  ; Write to output buffer
+WRBUF           C   !     F2AC  
+WRBUFX          C   !     F2C1  
+WOBUFX          C   !     F2C5  
+RDBUF           C   !     F2CA  ; read from input or output buffer
+RDOBUF          C   !     F2D9  ; read from output buffer
+RDBUF1          C   !     F2E2  ; Read byte from buffer
+LF2F0           C   !     F2F0  
+LF2F3           C   !     F2F3  
+ROBUFX          C   !     F309  
+ROLR13          C   !     F311  ; Roll R12:R13 according to active buffer (R10.2)
+ROLINP          C   !     F315  ; Roll input buffer
+LF322           C   !     F322  
+ROLOUT          C   !     F323  ; Roll output buffer
+LF330           C   !     F330  
+CHKBUF          C   !     F331  ; Check if inp or out buffer full or above HWM
+CKOBUF          C   !     F335  ; Check if output buffer full or above HWM
+LF343           C   !     F343  
+CKIBUF          C   !     F347  ; Check if input buffer full or above HWM
+LF356           C   !     F356  
+LF362           C   !     F362  
+LF36E           C   !     F36E  
+TXOFF           C   !     F371  ; Send XOFF, clear DTR/BUSY*
+TXON            C   !     F378  ; Send XON, set DTR/BUSY*
+LF384           C   !     F384  
+INT1            C   !     F385  ; INT1 handler (SP0256)
+LF3AE           C   !     F3AE  
+SELRUL          C   !     F3AF  ; select rules set
+LF3B5           C   !     F3B5  
+LF3C1           C   !     F3C1  
+LF3C7           C   !     F3C7  
+LF3CF           C   !     F3CF  
+LF3D5           C   !     F3D5  
+LF3DF           C   !     F3DF  
+ENCODE          C   !     F3E7  ; Encode text to allophones
+LF3EE           C   !     F3EE  
+LF3F4           C   !     F3F4  
+LF400           C   !     F400  
+LF403           C   !     F403  
+LF41B           C   !     F41B  
+LF420           C   !     F420  
+LF467           C   !     F467  
+LF46D           C   !     F46D  
+LF46F           C   !     F46F  
+LF47A           C   !     F47A  
+LSEEKB          C   !     F47E  ; left seek '['
+LF484           C   !     F484  
+RSEEKB          C   !     F488  ; right seek Bth '['
+LF48A           C   !     F48A  
+LF496           C   !     F496  
+LF49C           C   !     F49C  
+WRALLO          C   !     F49E  ; Write allophones
+LF4AB           C   !     F4AB  
+LF4BC           C   !     F4BC  
+LF4C1           C   !     F4C1  
+CMPBKT          C   !     F4C2  ; compare in-brackets
+LF4D4           C   !     F4D4  
+LF4DD           C   !     F4DD  
+LF4E6           C   !     F4E6  
+LF4F1           C   !     F4F1  
+LF4FE           C   !     F4FE  
+LF502           C   !     F502  
+LF50C           C   !     F50C  
+GFLAGS          C   !     F514  ; Get letter flags
+GFLAGX          C   !     F524  
+LTFLGS          C   !     F526  ; Letter flags
+PATBRT          C   !     F540  ; Pattern jump table
+CHKPAT          C   !     F564  ; Check rule pattern
+LF570           C   !     F570  
+LF572           C   !     F572  
+LF576           C   !     F576  
+LF582           C   !     F582  
+LF588           C   !     F588  
+LF58C           C   !     F58C  
+LF595           C   !     F595  
+PATFLD          C   !     F59A  ; pattern match failed
+LF5A4           C   !     F5A4  
+PATNLT          C   !     F5B0  ; <	13	Anything other than a letter
+PAT1MC          C   !     F5B9  ; *	11	1+ consonants
+LF5C1           C   !     F5C1  
+PAT2MV          C   !     F5CC  ; ?	14	2+ vowels
+LF5D4           C   !     F5D4  
+LF5DF           C   !     F5DF  
+PAT0MC          C   !     F5EA  ; :	10	0+ consonants
+LF5F2           C   !     F5F2  
+LF5FB           C   !     F5FB  
+PATOK1          C   !     F5FE  ; pattern match ok
+PATSUF          C   !     F601  ; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+LF618           C   !     F618  
+LF621           C   !     F621  
+LF62A           C   !     F62A  
+LF633           C   !     F633  
+LF63C           C   !     F63C  
+LF645           C   !     F645  
+LF64E           C   !     F64E  
+LF657           C   !     F657  
+LF66A           C   !     F66A  
+LF682           C   !     F682  
+PATFL1          C   !     F689  ; pattern match failed
+CHKLTR          C   !     F68C  ; Test if next input char is a letter, R10.5=1 if yes
+PATVOW          C   !     F69E  ; #	09	1+ vowels
+LF6A6           C   !     F6A6  
+PATVOC          C   !     F6B4  ; .	0A	voiced consonant: B D G J L M N R V W X
+PATOK2          C   !     F6BC  
+PAT1CO          C   !     F6BF  ; ^	0E	1 consonant only
+PATFVO          C   !     F6C7  ; +	0F	front vowel: E I Y
+PATBVO          C   !     F6CF  ; >	12	back vowel: O U
+PATSIB          C   !     F6D7  ; &	0C	sibilant: S C G Z X J CH SH
+PATPLU          C   !     F6E2  ; @	0D	T S R D L Z N J TH CH SH preceding long U
+LF6F0           C   !     F6F0  
+LF6FC           C   !     F6FC  
+FETCH           C   !     F70F  ; Fetch char and mask high bit
+INCR17          C   !     F71B  ; inc R16:17 and roll if needed
+LF721           C   !     F721  
+INCR3           C   !     F72B  ; inc R2:3 and roll if needed
+LF731           C   !     F731  
+DECR3           C   !     F73B  ; dec R2:3 and roll if needed
+LF74A           C   !     F74A  
+DECR17          C   !     F74B  ; dec R16:17 and roll if needed
+LF75A           C   !     F75A  
+GNEXT           C   !     F75B  ; get next char and move code to range 00-3F
+LF766           C   !     F766  
+LF774           C   !     F774  
+LF77A           C   !     F77A  
+UNGET           C   !     F77F  ; Unget last input character
+LF787           C   !     F787  
+RLPNCT          C   !     F78C  ; Rules for punctuation
+RULESA          C   !     F7CC  ; Rules for 'A'
+RULESB          C   !     F882  ; Rules for 'B'
+RULESC          C   !     F8CC  ; Rules for 'C'
+RULESD          C   !     F919  ; Rules for 'D'
+RULESE          C   !     F976  ; Rules for 'E'
+RULESF          C   !     FA30  ; Rules for 'F'
+RULESG          C   !     FA44  ; Rules for 'G'
+RULESH          C   !     FA8A  ; Rules for 'H'
+RULESI          C   !     FAB4  ; Rules for 'I'
+RULESJ          C   !     FB4C  ; Rules for 'J'
+RULESK          C   !     FB55  ; Rules for 'K'
+RULESL          C   !     FB66  ; Rules for 'L'
+RULESM          C   !     FB87  ; Rules for 'M'
+RULESN          C   !     FB99  ; Rules for 'N'
+RULESO          C   !     FBDF  ; Rules for 'O'
+RULESP          C   !     FCE1  ; Rules for 'P'
+RULESQ          C   !     FD0D  ; Rules for 'Q'
+RULESR          C   !     FD29  ; Rules for 'R'
+RULESS          C   !     FD3D  ; Rules for 'S'
+RULEST          C   !     FDC2  ; Rules for 'T'
+RULESU          C   !     FE8E  ; Rules for 'U'
+RULESV          C   !     FECF  ; Rules for 'V'
+RULESW          C   !     FEDC  ; Rules for 'W'
+RULESX          C   !     FF2C  ; Rules for 'X'
+RULESY          C   !     FF3A  ; Rules for 'Y'
+RULESZ          C   !     FF84  ; Rules for 'Z'
+RULNUM          C   !     FF8E  ; Rules for digits
+TABRUL          C   !     FFBC  ; Index of rules tables
+TABRU1          C   !     FFBD  ; Index of rules tables LSB
+LFFFF           C   !     FFFF  
+
+Flags:
+------
+! Not generated
++ New symbol
+? Not referenced
+= EQUate
