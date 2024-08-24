@@ -1,0 +1,1923 @@
+** TMS-7000 Tiny Assembler - v0.3.0-alpha - (C) 2024 GmEsoft, All rights reserved. **
+
+	Sat Aug 24 09:22:08 2024
+
+	Assembly of  : CTS256A.asm
+	Output file  : CTS256A.cim
+	Listing file : CTS256A.LST
+
+    1:                  ;** TMS-7000(tm) DISASSEMBLER V1.10beta3 - (c) 2015-20 GmEsoft, All rights reserved. **
+    2:                  ;
+    3:                  ;	Tue Dec 27 08:39:46 2022
+    4:                  ;
+    5:                  ;	Disassembly of : CTS256A.BIN
+    6:                  ;	Equates file   : CTS256A.EQU
+    7:                  ;	Screening file : CTS256A.SCR
+    8:                  
+    9:                  
+   10:                  ;==============================================================================
+   11:                  
+   12:                  ; registers used by the text-to-speech code in the masked ROM...
+   13:  0000            REGA	EQU	R0			; A register
+   14:  0000            XREGA	EQU	>0000			; A register long address
+   15:  0001            REGB	EQU	R1			; B register
+   16:  0001            XREGB	EQU	>0001			; B register long address
+   17:  0002            INRDH	EQU	R2			; input buffer read pointer MSB
+   18:  0003            INRDL	EQU	R3			; input buffer read pointer LSB
+   19:  0003            INRD	EQU	R3			; input buffer read pointer
+   20:  0004            INWRH	EQU	R4			; input buffer write pointer MSB
+   21:  0005            INWRL	EQU	R5			; input buffer write pointer LSB
+   22:  0005            INWR	EQU	R5			; input buffer write pointer
+   23:  0006            OUTRDH	EQU	R6			; output buffer read pointer MSB
+   24:  0007            OUTRDL	EQU	R7			; output buffer read pointer LSB
+   25:  0007            OUTRD	EQU	R7			; output buffer read pointer
+   26:  0008            OUTWRH	EQU	R8			; output buffer write pointer MSB
+   27:  0009            OUTWRL	EQU	R9			; output buffer write pointer LSB
+   28:  0009            OUTWR	EQU	R9			; output buffer write pointer
+   29:  000A            FLAGS1	EQU	R10			; flags 1
+   30:  000B            FLAGS2	EQU	R11			; flags 2
+   31:  000C            BUFPTRH	EQU	R12			; buffer pointer MSB
+   32:  000D            BUFPTRL	EQU	R13			; buffer pointer MSB
+   33:  000D            BUFPTR	EQU	R13			; buffer pointer pair
+   34:  000D            XBUFPTR	EQU	>000D			; temp register pair long address
+   35:  000E            INRDPH	EQU	R14			; next input buffer read pointer MSB
+   36:  000F            INRDPL	EQU	R15			; next input buffer read pointer LSB
+   37:  000F            INRDP	EQU	R15			; next input buffer read pointer
+   38:  0010            INRDBH	EQU	R16			; backward input buffer read pointer MSB
+   39:  0011            INRDBL	EQU	R17			; backward input buffer read pointer LSB
+   40:  0011            INRDB	EQU	R17			; backward input buffer read pointer
+   41:  0012            PEPROMH	EQU	R18			; EPROM scan pointer MSB
+   42:  0013            PEPROML	EQU	R19			; EPROM scan pointer LSB
+   43:  0013            PEPROM	EQU	R19			; EPROM scan pointer
+   44:  0012            INRDLH	EQU	R18			; last input buffer read pointer MSB
+   45:  0013            INRDLL	EQU	R19			; last input buffer read pointer LSB
+   46:  0013            INRDLX	EQU	R19			; last input buffer read pointer
+   47:  0014            RULPTRH	EQU	R20			; Rules pointer MSB
+   48:  0015            RULPTRL	EQU	R21			; Rules pointer MSB
+   49:  0015            RULPTR	EQU	R21			; Rules pointer
+   50:  0016            NXTCHR	EQU	R22			; Next character (-$20 & $3F)
+   51:  0017            COUNTER	EQU	R23			; Counter (RAM pages or chars)
+   52:  0018            LSTDLMH	EQU	R24			; last delimiter position MSB
+   53:  0019            LSTDLML	EQU	R25			; last delimiter position LSB
+   54:  0019            LSTDELM	EQU	R25			; last delimiter position
+   55:  001B            ISP0256	EQU	R27			; SP0256 write address
+   56:  001C            INRDLBH	EQU	R28			; last backward input buffer read pointer MSB
+   57:  001D            INRDLBL	EQU	R29			; last backward input buffer read pointer LSB
+   58:  001D            INRDLB	EQU	R29			; last backward input buffer read pointer
+   59:  001E            INLWMH	EQU	R30			; input buffer low water mark MSB
+   60:  001F            INLWML	EQU	R31			; input buffer low water mark LSB
+   61:  001F            INLWMX	EQU	R31			; input buffer low water mark
+   62:  0020            INHWMH	EQU	R32			; input buffer low water mark MSB
+   63:  0021            INHWML	EQU	R33			; input buffer low water mark LSB
+   64:  0021            INHWMX	EQU	R33			; input buffer low water mark
+   65:  0022            INSTA1H	EQU	R34			; input buffer start - 1 MSB
+   66:  0023            INSTA1L	EQU	R35			; input buffer start - 1 LSB
+   67:  0023            INSTA1	EQU	R35			; input buffer start - 1
+   68:  0024            INENDH	EQU	R36			; input buffer end MSB
+   69:  0025            INENDL	EQU	R37			; input buffer end LSB
+   70:  0025            INEND	EQU	R37			; input buffer end
+   71:  0026            OUTEN1H	EQU	R38			; output buffer end + 1 MSB
+   72:  0027            OUTEN1L	EQU	R39			; output buffer end + 1 LSB
+   73:  0027            OUTEND1	EQU	R39			; output buffer end + 1
+   74:  0028            INSTAH	EQU	R40			; input buffer start MSB
+   75:  0029            INSTAL	EQU	R41			; input buffer start LSB
+   76:  0029            INSTA	EQU	R41			; input buffer start
+   77:  002A            OUTSTAH	EQU	R42			; output buffer start MSB
+   78:  002B            OUTSTAL	EQU	R43			; output buffer start LSB
+   79:  002B            OUTSTA	EQU	R43			; output buffer start
+   80:  002D            PSP0256	EQU	R45			; SP0256 base pointer
+   81:  002F            PPARINP	EQU	R47			; Parallel input base pointer
+   82:  0030            JEPROMH	EQU	R48			; EPROM jump vector MSB
+   83:  0031            JEPROM	EQU	R49			; EPROM jump vector
+   84:  0032            OUTHWM	EQU	R50			; output buffer high water mark
+   85:  0033            INFREEH	EQU	R51			; number of free bytes in input buffer MSB
+   86:  0034            INFREEL	EQU	R52			; number of free bytes in input buffer LSB
+   87:  0034            INFREE	EQU	R52			; number of free bytes in input buffer
+   88:  0035            OUTFREH	EQU	R53			; number of free bytes in output buffer MSB
+   89:  0036            OUTFREL	EQU	R54			; number of free bytes in output buffer LSB
+   90:  0036            OUTFREE	EQU	R54			; number of free bytes in output buffer
+   91:  0037            MATCHED	EQU	R55			; matched chars counter
+   92:  0038            INLENH	EQU	R56			; number of bytes in input buffer MSB
+   93:  0039            INLENL	EQU	R57			; number of bytes in input buffer LSB
+   94:  0039            INLEN	EQU	R57			; number of bytes in input buffer
+   95:                  
+   96:                  ; I/O ports...
+   97:  0100            IOCNT0	EQU	P0			; I/O Control register 0
+   98:  0104            APORT	EQU	P4			; Port A
+   99:  0106            BPORT	EQU	P6			; Port B
+  100:  0110            IOCNT1	EQU	P16			; I/O Control register 1
+  101:  0111            SSTAT	EQU	P17			; read - Serial port Status
+  102:  0111            SMODE	EQU	P17			; 1st write - Serial port Mode
+  103:  0111            SCTL0	EQU	P17			; 2nd and subsequent writes - Serial port Control register 0
+  104:  0114            T3DATA	EQU	P20			; Timer 3 Data
+  105:  0115            SCTL1	EQU	P21			; Serial Control register 1
+  106:  0116            RXBUF	EQU	P22			; Serial Receive Buffer
+  107:  0117            TXBUF	EQU	P23			; Serial Transmit Buffer
+  108:                  
+  109:                  
+  110:                  
+  111:                  
+  112:                  
+  113:                  ;==============================================================================
+  114:                  
+  115:  F000            	AORG	>F000
+  116:                  
+  117:                  ;==============================================================================
+  118:                  
+  119:                  	; Main entry point
+  120:  F000  523A      CTS256	MOV	%>3A,B
+  121:  F002  0D        	LDSP				; Init stack pointer 3B-XX
+  122:  F003  8820002D  	MOVD	%SP0256,PSP0256		; PSP0256 := $2000 - Memory-mapped parallel output to SP0256A-AL2
+  123:  F007  A2AA00    	MOVP	%>AA,IOCNT0		; IOCNT0 = IOCNT0 := 1010 1010
+  124:                  					; 	Full Expansion;
+  125:                  					;	Clear INT1, INT2 and INT3 flags
+  126:  F00A  A20A10    	MOVP	%>0A,IOCNT1		; IOCNT1 = IOCNT1 := 0000 1010
+  127:                  					;	Clear INT4 and INT5 flags
+  128:  F00D  9104      	MOVP	APORT,B			; Read APORT = APORT
+  129:  F00F  5307      	AND	%>07,B			; Get Serial mode
+  130:  F011  5D00      	CMP	%>00,B			; Is it Parallel mode?
+  131:                  					; useful?
+  132:                  	; Jump if yes
+  133:  F013  E239      	JZ	PARALL			; Start in parallel mode
+  134:  F015  737F0A    	AND	%>7F,FLAGS1		; Clear FLAGS1.7, indicating serial mode
+  135:  F018  8004      	MOVP	APORT,A			; Read APORT = APORT
+  136:  F01A  2308      	AND	%>08,A			; Get Selectable Serial Config flag
+  137:  F01C  2D00      	CMP	%>00,A			; Is it set?
+  138:                  					; useful?
+  139:                  	; Jump if not
+  140:  F01E  E207      	JZ	SER7N2			; Serial fixed 7N2 config
+  141:  F020  8A1000    	LDA	@>1000			; Read serial config from $1000
+  142:  F023  8211      	MOVP	A,SMODE			; Init P17 = SMODE with serial config
+  143:  F025  E003      	JMP	SERSEL			; Serial selectable config
+  144:                  
+  145:  F027  A2CB11    SER7N2	MOVP	%>CB,SMODE		; P17 = SMODE := Fixed Serial 7N2 config
+  146:  F02A  A21511    SERSEL	MOVP	%>15,SCTL0		; P17 = SCTL0 := OOO1 O1O1
+  147:                  					; Reset error flags; enable RX & TX
+  148:                  	; A := value for SCTL1 (prescaler)
+  149:  F02D  AAF03E    	LDA	@SCT1TB(B)		; Table of values for SCTL1
+  150:  F030  B8        	PUSH	A
+  151:                  	; A := value for T3DATA (timer3 reload)
+  152:  F031  AAF046    	LDA	@T3DATB(B)		; Table of timer3 reload values T3DATA
+  153:  F034  C9        	POP	B
+  154:  F035  9215      	MOVP	B,SCTL1			; set SCTL1
+  155:  F037  8214      	MOVP	A,T3DATA		; set T3DATA
+  156:  F039  A40110    	ORP	%>01,IOCNT1		; enable T4
+  157:                  	; proceed with RAM setup
+  158:  F03C  E01A      	JMP	INIRAM			; Init RAM config
+  159:                  
+  160:                  	; Table of values for SCTL1
+  161:  F03E  FF404340  SCT1TB	BYTE	>FF,>40,>43,>40,>43,>40,>40,>40
+              43404040
+  162:                  
+  163:                  	; Table of timer3 reload values T3DATA
+  164:  F046  FF205707  T3DATB	BYTE	>FF,>20,>57,>07,>C2,>0F,>81,>03
+              C20F8103
+  165:                  
+  166:                  	; Start in parallel mode
+  167:  F04E  74800A    PARALL	OR	%>80,FLAGS1		; Set FLAGS1.7, indicating parallel mode
+  168:  F051  8802002F  	MOVD	%PARINP,PPARINP		; PPARINP := $0200 parallel input mapped address
+  169:  F055  A43000    	ORP	%>30,IOCNT0		; IOCNT0 = IOCNT0, set .4=enable INT3, .5=clear INT3
+  170:                  	; Init RAM config
+  171:  F058  9104      INIRAM	MOVP	APORT,B			; B := APORT = APORT
+  172:  F05A  5310      	AND	%>10,B			; test APORT.4 = RAM buffer - 0=internal - 1=external
+  173:  F05C  5D00      	CMP	%>00,B			; useful?
+  174:                  	; jump if internal
+  175:  F05E  E259      	JZ	INTRAM			; init internal RAM pointers
+  176:                  
+  177:  F060  88300003  	MOVD	%CTSXRAM,INRD		; INRD := base RAM address = $3000
+  178:  F064  980329    	MOVD	INRD,INSTA		; INSTA := INRD
+  179:  F067  D802      	PUSH	INRDH
+  180:  F069  D202      	DEC	INRDH
+  181:  F06B  420222    	MOV	INRDH,INSTA1H		; INSTA1 := INRD - 1 ($2FFF)
+  182:  F06E  72FF23    	MOV	%>FF,INSTA1L
+  183:  F071  780202    	ADD	%>02,INRDH		; INRDH += 2 ($31)
+  184:  F074  D517      	CLR	COUNTER			; COUNTER := 0 (page counter)
+  185:                  	; Init external RAM sizing loop
+  186:                  
+  187:  F076  D302      IRAML0	INC	INRDH			; ++INRDH
+  188:  F078  7DF002    	CMP	%>F0,INRDH		; INRDH == $F0 ($F000 reached)?
+  189:                  	; Exit loop if yes
+  190:  F07B  E21E      	JZ	IRAMX0
+  191:  F07D  D317      	INC	COUNTER			; ++COUNTER
+  192:  F07F  7D1017    	CMP	%>10,COUNTER		; COUNTER == $10 (16 pages)?
+  193:                  	; exit loop if yes
+  194:  F082  E217      	JZ	IRAMX0
+  195:  F084  225A      	MOV	%>5A,A			; A := $5A (RAM test pattern)
+  196:  F086  9B03      	STA	*INRD			; *INRD := A
+  197:  F088  B5        	CLR	A			; A := 0 (useful?)
+  198:  F089  9A03      	LDA	*INRD			; A := *INRD
+  199:  F08B  2D5A      	CMP	%>5A,A			; A == $5A (test pattern)?
+  200:                  	; exit loop if not
+  201:  F08D  E60C      	JNZ	IRAMX0
+  202:  F08F  B7        	SWAP	A			; A := $A5 (reverse bits)
+  203:  F090  9B03      	STA	*INRD			; *INRD := A
+  204:  F092  B5        	CLR	A			; A := 0 (useful?)
+  205:  F093  9A03      	LDA	*INRD			; A := *INRD
+  206:  F095  2DA5      	CMP	%>A5,A			; A == $A5 (test pattern)?
+  207:                  	; exit loop if not
+  208:  F097  E602      	JNZ	IRAMX0
+  209:                  	; Test next RAM page
+  210:  F099  E0DB      	JMP	IRAML0
+  211:                  
+  212:  F09B  420226    IRAMX0	MOV	INRDH,OUTEN1H		; OUTEND1 := INRDH:$00 (end RAM addr + 1)
+  213:  F09E  D527      	CLR	OUTEN1L			; ATTENTION: page boundary !!
+  214:  F0A0  7A0102    	SUB	%>01,INRDH		; --INRDH (why not DEC INRDH?)
+  215:  F0A3  980307    	MOVD	INRD,OUTRD		; OUTRD   := INRD = last RAM page addr (output buffer read ptr)
+  216:  F0A6  98072B    	MOVD	OUTRD,OUTSTA		; OUTSTA  := OUTRD (output buffer start)
+  217:  F0A9  7A0102    	SUB	%>01,INRDH		; --INRDH (why not DEC INRDH?)
+  218:  F0AC  420224    	MOV	INRDH,INENDH		; INEND   := INRDH:$FF (input buffer end)
+  219:  F0AF  72FF25    	MOV	%>FF,INENDL
+  220:  F0B2  D902      	POP	INRDH			; INRDH   := $30
+  221:  F0B4  72DF32    	MOV	%>DF,OUTHWM		; OUTHWM  := $DF
+  222:  F0B7  E01D      	JMP	INIROM			; Init EPROM
+  223:                  
+  224:                  	; init internal RAM pointers
+  225:  F0B9  88005129  INTRAM	MOVD	%>0051,INSTA		; INSTA   := $0051 (input buffer start)
+  226:  F0BD  88006525  	MOVD	%>0065,INEND		; INEND   := $0065 (input buffer end)
+  227:  F0C1  88005023  	MOVD	%>0050,INSTA1		; INSTA1  := $0050 (input buffer start - 1)
+  228:  F0C5  8800662B  	MOVD	%>0066,OUTSTA		; OUTSTA  := $0066 (output buffer start)
+  229:  F0C9  88008027  	MOVD	%>0080,OUTEND1		; OUTEND1 := $0080 (end RAM addr + 1)
+  230:  F0CD  982903    	MOVD	INSTA,INRD		; INRD    := $0051 (input buffer read ptr)
+  231:  F0D0  982B07    	MOVD	OUTSTA,OUTRD		; OUTRD   := $0066 (output buffer read ptr)
+  232:  F0D3  720132    	MOV	%>01,OUTHWM		; OUTHWM  := $01   (output high water mark)
+  233:                  
+  234:                  	; Init EPROM
+  235:  F0D6  88000013  INIROM	MOVD	%>0000,PEPROM		; PEPROM := 0
+  236:  F0DA  C5        LF0DA	CLR	B			; B := 0 (5 signature bytes counter/index)
+  237:  F0DB  781012    	ADD	%>10,PEPROMH		; ++PEPROMH (next page, starting at $1000)
+  238:  F0DE  7DF012    	CMP	%>F0,PEPROMH		; $F0 reached? (ending at $F000)
+  239:                  	; Jump if yes
+  240:  F0E1  E217      	JZ	INITOK			; Done peripherals init
+  241:  F0E3  9A13      LF0E3	LDA	*PEPROM			; Read signature byte
+  242:                  	; and compare it to the 5 first letters flags $80,$48,$28,$58,$85
+  243:  F0E5  ADF526    	CMPA	@LTFLGS(B)		; Letter flags
+  244:                  	; next page if mismatch
+  245:  F0E8  E6F0      	JNZ	LF0DA
+  246:  F0EA  C3        	INC	B			; next test byte
+  247:  F0EB  5D05      	CMP	%>05,B			; done 5 bytes
+  248:                  	; Exit if yes => EPROM found
+  249:  F0ED  E204      	JZ	STAROM			; Boot in EPROM
+  250:  F0EF  D313      	INC	PEPROML			; next EPROM byte
+  251:  F0F1  E0F0      	JMP	LF0E3			; loop
+  252:                  
+  253:                  	; Boot in EPROM
+  254:  F0F3  D313      STAROM	INC	PEPROML			; point to 1st byte following sig bytes
+  255:  F0F5  981331    	MOVD	PEPROM,JEPROM		; JEPROM := PEPROM = EPROM entry point
+  256:  F0F8  9C31      	BR	*JEPROM			; Boot in EPROM
+  257:                  
+  258:                  	; Done peripherals init
+  259:  F0FA  720030    INITOK	MOV	%>00,JEPROMH		; JEPROMH := 0 (EPROM not present)
+  260:  F0FD  8EF143    	CALL	@INIPTR			; Init buffer pointers and regs
+  261:  F100  8EF1AC    	CALL	@SAYOK			; Say O.K.
+  262:  F103  E00B      	JMP	LF110
+  263:                  
+  264:                  ;==============================================================================
+  265:                  
+  266:                  	; Polling loop
+  267:  F105  76010B07  POLL	BTJO	%>01,FLAGS2,LF110	; test FLAGS2.0 = any delimiter; jump if yes
+  268:  F109  73EF0B    	AND	%>EF,FLAGS2		; reset FLAGS2.4 (found delimiter?)
+  269:                  
+  270:                  	; Idle loop (wait interrupt?)
+  271:  F10C  77100BFC  WTIDLE	BTJZ	%>10,FLAGS2,WTIDLE	; Idle loop (wait FLAGS2.4)
+  272:  F110  4D0305    LF110	CMP	INRDL,INWRL		; Input buffer read ptr LSB != write ptr LSB?
+  273:  F113  E607      	JNZ	ENDPOL			; Exit polling loop if yes
+  274:  F115  4D0204    	CMP	INRDH,INWRH		; Idem for MSB?
+  275:  F118  E602      	JNZ	ENDPOL			; Exit polling loop if yes
+  276:  F11A  E0E9      	JMP	POLL			; Polling loop
+  277:                  
+  278:                  	; Exit polling loop
+  279:  F11C  7D0038    ENDPOL	CMP	%>00,INLENH		; Chars in buffer MSB
+  280:  F11F  E605      	JNZ	LF126			; exit ENDPOL loop if != 0
+  281:  F121  7D0039    	CMP	%>00,INLENL		; Chars in buffer LSB
+  282:  F124  E2F6      	JZ	ENDPOL			; loop if == 0
+  283:                  
+  284:                  	; Exit ENDPOL loop
+  285:  F126  77080B09  LF126	BTJZ	%>08,FLAGS2,LF133	; FLAGS2.3 == 1 (output buffer full or too high)? Jump if not
+  286:  F12A  7D0132    	CMP	%>01,OUTHWM		; Internal RAM?
+  287:                  	; jump if yes
+  288:  F12D  E211      	JZ	CLBUF1			; Clear buffers if yes
+  289:                  
+  290:                  	; wait reset of bit 3 of FLAGS2
+  291:  F12F  76080BFC  W11B3	BTJO	%>08,FLAGS2,W11B3	; wait reset of bit 3 of FLAGS2 (output buffer low enough)
+  292:  F133  8EF3E7    LF133	CALL	@ENCODE			; Encode text to allophones
+  293:  F136  4D0709    	CMP	OUTRDL,OUTWRL		; Output buffer empty?
+  294:  F139  E2D5      	JZ	LF110			; jump to input buffer polling loop if yes
+  295:  F13B  A40100    	ORP	%>01,IOCNT0		; enable INT1* (SP0256) to send output
+  296:  F13E  E0D0      	JMP	LF110			; jump to input buffer polling loop
+  297:                  
+  298:                  	; Clear buffers
+  299:  F140  8CF1F0    CLBUF1	BR	@CLBUF			; clear buffers - reinit
+  300:                  
+  301:                  ;==============================================================================
+  302:                  
+  303:                  	; Init buffer pointers and regs
+  304:  F143  73000B    INIPTR	AND	%>00,FLAGS2		; FLAGS2  := 0 (why not CLR FLAGS2?)
+  305:  F146  D537      	CLR	MATCHED			; MATCHED := 0 (matched chars to discard)
+  306:  F148  D538      	CLR	INLENH			; INLENH  := 0
+  307:  F14A  D539      	CLR	INLENL			; INLENL  := 0
+  308:  F14C  A40106    	ORP	%>01,BPORT		; set BPORT.0 (DSR/BUSY)
+  309:  F14F  982903    	MOVD	INSTA,INRD		; INRD    := INSTA (input buffer start)
+  310:  F152  982B07    	MOVD	OUTSTA,OUTRD		; OUTRD   := OUTSTA (output buffer start)
+  311:  F155  2220      	MOV	%>20,A			; A       := $20
+  312:  F157  9B03      	STA	*INRD			; *INRD   := $20 (input buffer read ptr)
+  313:  F159  8EF72B    	CALL	@INCINRD		; inc INRD and roll to INSTA if == OUTSTA
+  314:  F15C  980305    	MOVD	INRD,INWR		; INWR := INRD (input buffer write ptr)
+  315:  F15F  D803      	PUSH	INRDL			; save pointers
+  316:  F161  D807      	PUSH	OUTRDL
+  317:  F163  D806      	PUSH	OUTRDH
+  318:  F165  D203      	DEC	INRDL			; OUTRD := ( OUTRD - INRD + 1 ) = input buffer size
+  319:  F167  4A0307    	SUB	INRDL,OUTRDL
+  320:  F16A  4B0206    	SBB	INRDH,OUTRDH
+  321:  F16D  980734    	MOVD	OUTRD,INFREE		; INFREE := input buffer size - 1
+  322:  F170  DB34      	DECD	INFREE
+  323:  F172  B0        	TSTA				; = CLR C
+  324:  F173  DD06      	RRC	OUTRDH			; OUTRD /= 2
+  325:  F175  DD07      	RRC	OUTRDL
+  326:  F177  98071F    	MOVD	OUTRD,INLWMX		; INLWMX := buffer size / 2 (and clears C)
+  327:  F17A  DD06      	RRC	OUTRDH			; OUTRD /= 2
+  328:  F17C  DD07      	RRC	OUTRDL
+  329:  F17E  B0        	TSTA				; = CLR C
+  330:  F17F  DD06      	RRC	OUTRDH			; OUTRD /= 2
+  331:  F181  DD07      	RRC	OUTRDL
+  332:  F183  980721    	MOVD	OUTRD,INHWMX		; INHWMX := buffer size / 8
+  333:  F186  D906      	POP	OUTRDH			; restore pointers
+  334:  F188  D907      	POP	OUTRDL
+  335:  F18A  D903      	POP	INRDL
+  336:  F18C  980709    	MOVD	OUTRD,OUTWR		; OUTWR := OUTRD = output buffer write ptr
+  337:  F18F  980319    	MOVD	INRD,LSTDELM		; LSTDELM last delimiter ptr := INRD input buffer read ptr
+  338:  F192  982736    	MOVD	OUTEND1,OUTFREE		; OUTFREE := OUTEND1 = end RAM address + 1
+  339:  F195  4A2B36    	SUB	OUTSTAL,OUTFREE		; OUTFREE := ( OUTFREE - OUTSTA ) = output buffer size
+  340:  F198  4B2A35    	SBB	OUTSTAH,OUTFREH
+  341:  F19B  9104      	MOVP	APORT,B			; B := APORT
+  342:  F19D  5380      	AND	%>80,B			; APORT.7 set? (Delimiter=any)
+  343:  F19F  5D00      	CMP	%>00,B			; useful?
+  344:                  	; Jump if not
+  345:  F1A1  E203      	JZ	LF1A6
+  346:  F1A3  74010B    	OR	%>01,FLAGS2		; FLAGS2.0 := 1 if any delimiter
+  347:  F1A6  05        LF1A6	EINT				; enable interrupts
+  348:  F1A7  0A        	RETS
+  349:                  
+  350:                  ;==============================================================================
+  351:                  
+  352:                  	; "O-K\n"
+  353:  F1A8  4F2D4B    STROK	TEXT	'O-K'
+  354:  F1AB  0D        	BYTE	>0D
+  355:                  
+  356:                  	; Say O.K.
+  357:                  AUDIBLE					; from datasheet
+  358:  F1AC  73F90A    SAYOK	AND	%>F9,FLAGS1		; Clear FLAGS1.1 and FLAGS1.2: Write to input buffer
+  359:  F1AF  C5        	CLR	B
+  360:  F1B0  AAF1A8    LF1B0	LDA	@STROK(B)		; Get char
+  361:  F1B3  8EF1E2    	CALL	@STINPB			; Store char in input buffer
+  362:  F1B6  C3        	INC	B			; next char
+  363:  F1B7  5D04      	CMP	%>04,B			; loop until 4 chars processed
+  364:  F1B9  E6F5      	JNZ	LF1B0
+  365:  F1BB  0A        	RETS				; return
+  366:                  
+  367:                  ;==============================================================================
+  368:                  
+  369:                  	; INT4 handler (serial interrupt)
+  370:  F1BC  A6021101  INT4	BTJOP	%>02,SSTAT,INT3		; Jump if P17.1 (RXRDY) == 1
+  371:  F1C0  0B        	RETI				; else return from interrupt
+  372:                  
+  373:                  	; INT3 handler (parallel interrupt)
+  374:  F1C1  B8        INT3	PUSH	A			; save A from interrupt
+  375:  F1C2  76800A0B  	BTJO	%>80,FLAGS1,LF1D1	; FLAGS1.7 (parallel mode) == 1? Jump if yes
+  376:  F1C6  A3FE10    	ANDP	%>FE,IOCNT1		; Reset IOCNT1.0 (disable serial INT4)
+  377:                  	; wait RXBUF ready with new character
+  378:  F1C9  A70211FC  WRXRDY	BTJZP	%>02,SSTAT,WRXRDY	; wait RXBUF ready with new character
+  379:  F1CD  8016      	MOVP	RXBUF,A			; get A := RXBUF incoming character
+  380:  F1CF  E005      	JMP	LF1D6			; handle incoming char in A
+  381:                  
+  382:                  	; Parallel mode
+  383:  F1D1  A3EF00    LF1D1	ANDP	%>EF,IOCNT0		; Disable IOCNT0.0 = INT3*
+  384:  F1D4  9A2F      	LDA	*PPARINP		; Read char from parallel input ($0200)
+  385:                  
+  386:                  	; Handle incoming char
+  387:  F1D6  8EF1E2    LF1D6	CALL	@STINPB			; Store char in input buffer
+  388:  F1D9  B9        	POP	A			; restore A from interrupt
+  389:  F1DA  76200B03  	BTJO	%>20,FLAGS2,LF1E1	; FLAGS2.5 == 1? (input buffer full) skip next instr if yes
+  390:  F1DE  8EF28C    	CALL	@ENINT			; re-enable parallel or serial interrupt
+  391:  F1E1  0B        LF1E1	RETI				; return from interrupt
+  392:                  
+  393:                  ;==============================================================================
+  394:                  
+  395:                  	; Store char in input buffer
+  396:  F1E2  C8        STINPB	PUSH	B			; Save registers
+  397:  F1E3  D80A      	PUSH	FLAGS1
+  398:  F1E5  D80C      	PUSH	BUFPTRH
+  399:  F1E7  D80D      	PUSH	BUFPTRL
+  400:  F1E9  73F90A    	AND	%>F9,FLAGS1		; reset FLAGS1.1 and FLAGS1.2: write to input buffer
+  401:  F1EC  2D1B      	CMP	%>1B,A			; <ESC>? => clear buffers
+  402:  F1EE  E614      	JNZ	NOTESC			; Skip if not
+  403:                  
+  404:                  	; clear buffers - reinit
+  405:  F1F0  A3FE00    CLBUF	ANDP	%>FE,IOCNT0		; Disable INT1* (SP0256)
+  406:  F1F3  8EF143    	CALL	@INIPTR			; Init buffer pointers and regs
+  407:  F1F6  523A      	MOV	%>3A,B			; Init SP
+  408:  F1F8  0D        	LDSP				;
+  409:  F1F9  982D1B    	MOVD	PSP0256,ISP0256		; R26:27 := R44:45  (SP0256 device)
+  410:  F1FC  9B1B      	STA	*ISP0256		; *R26:27 := A  (SP0256 device)
+  411:  F1FE  8EF28C    	CALL	@ENINT			; Enable input interrupt (parallel or serial)
+  412:  F201  8CF105    	BR	@POLL			; Polling loop
+  413:                  
+  414:                  	; Not <ESC>
+  415:  F204  2D12      NOTESC	CMP	%>12,A			; <Ctrl-R>? => backspace until last delimiter
+  416:  F206  E619      	JNZ	NOTCTR			; Skip if not
+  417:                  
+  418:                  	; Handle <Ctrl-R>
+  419:  F208  76010B12  	BTJO	%>01,FLAGS2,LF21E	; FLAGS2.0 == 1 (any delimiter)? Exit if yes
+  420:  F20C  4A1903    	SUB	LSTDLML,INRDL		; INRD (input buf read ptr) -= LSTDELM (last delimiter)
+  421:  F20F  4B1802    	SBB	LSTDLMH,INRDH		;	(may not work correctly if rolled...)
+  422:  F212  4A0334    	SUB	INRDL,INFREEL		; INFREE (input buffer free size) -= INRD
+  423:  F215  4B0233    	SBB	INRDH,INFREEH
+  424:  F218  981903    	MOVD	LSTDELM,INRD		; INRD := LSTDELM (last delimiter position)
+  425:  F21B  720139    	MOV	%>01,INLENL		; input buffer counter LSB(why?) := 1
+  426:  F21E  8CF284    LF21E	BR	@XSTINP			; exit handler
+  427:                  
+  428:                  	; Not <Ctrl-R>
+  429:  F221  2D08      NOTCTR	CMP	%>08,A			; <BkSp>?
+  430:  F223  E623      	JNZ	NOTBKS			; Skip if not
+  431:                  
+  432:                  	; Handle <BkSp>
+  433:  F225  4D0204    	CMP	INRDH,INWRH		; Input buffer pointers equal?
+  434:  F228  E605      	JNZ	LF22F
+  435:  F22A  4D0305    	CMP	INRDL,INWRL
+  436:  F22D  E255      	JZ	XSTINP			; If yes, exit handler
+  437:  F22F  D803      LF22F	PUSH	INRDL			; Save INRD
+  438:  F231  D802      	PUSH	INRDH
+  439:  F233  980503    	MOVD	INWR,INRD		; INRD := INWR input buffer write ptr
+  440:  F236  8EF73B    	CALL	@DECINRD		; dec INRD and roll if needed
+  441:  F239  980305    	MOVD	INRD,INWR		; INWR := INRD
+  442:  F23C  D902      	POP	INRDH			; restore INRD
+  443:  F23E  D903      	POP	INRDL
+  444:  F240  D334      	INC	INFREEL			; Inc INFREE input buffer free size
+  445:  F242  E740      	JNC	XSTINP
+  446:  F244  D333      	INC	INFREEH
+  447:  F246  E03C      	JMP	XSTINP			; exit handler
+  448:                  
+  449:                  	; Not <BkSp>: Handle other chars
+  450:  F248  2D27      NOTBKS	CMP	%>27,A			; '''?
+  451:  F24A  E226      	JZ	STOCHR			; Jump if yes
+  452:  F24C  2D7B      	CMP	%>7B,A			; higher than 'z'?
+  453:  F24E  E40C      	JP	DELIMT			; Jump if yes
+  454:  F250  2D30      	CMP	%>30,A			; '0'..'9'?
+  455:  F252  E108      	JN	DELIMT
+  456:  F254  2D3A      	CMP	%>3A,A
+  457:  F256  E11A      	JN	STOCHR
+  458:  F258  2D41      	CMP	%>41,A			; >= 'A'?
+  459:  F25A  E516      	JPZ	STOCHR
+  460:                  
+  461:                  	; Delimiter (not letter/digit/')
+  462:  F25C  76010B07  DELIMT	BTJO	%>01,FLAGS2,LF267	; FLAGS2.0 set (any delimiter)? Jump if yes
+  463:  F260  2D0D      	CMP	%>0D,A			; <CR>?
+  464:  F262  E606      	JNZ	LF26A			; skip if not
+  465:  F264  74100B    	OR	%>10,FLAGS2		; FLAGS2.4 := 1 (found CR => exit idle loop)
+  466:  F267  980319    LF267	MOVD	INRD,LSTDELM		; LSTDELM := INRD (last delimiter position)
+  467:  F26A  2480      LF26A	OR	%>80,A			; A.7 := 1 (set high bit) if delimiter
+  468:  F26C  D339      	INC	INLENL			; Increment INFREE (# of bytes in input buffer)
+  469:  F26E  E702      	JNC	STOCHR			; put char in buffer
+  470:  F270  D338      	INC	INLENH
+  471:                  
+  472:                  	; put char in buffer
+  473:  F272  8EF298    STOCHR	CALL	@RWBUFR			; write char in buffer
+  474:  F275  77200B0B  	BTJZ	%>20,FLAGS2,XSTINP	; FLAGS2.5 set (inp buffer full)? if not exit handler
+  475:  F279  228D      	MOV	%>8D,A			; A := <CR> + $80
+  476:  F27B  D339      	INC	INLENL			; Increment INFREE (# of bytes in input buffer)
+  477:  F27D  E702      	JNC	DINC1
+  478:  F27F  D338      	INC	INLENH
+  479:  F281  8EF298    DINC1	CALL	@RWBUFR			; write char in buffer
+  480:                  	; exit handler
+  481:  F284  D90D      XSTINP	POP	BUFPTRL			; Restore registers
+  482:  F286  D90C      	POP	BUFPTRH
+  483:  F288  D90A      	POP	FLAGS1
+  484:  F28A  C9        	POP	B
+  485:  F28B  0A        	RETS				; end of input char handling
+  486:                  
+  487:                  ;==============================================================================
+  488:                  
+  489:                  	; FLAGS1:7 ? (enable INT3) : (enable INT4)
+  490:  F28C  77800A04  ENINT	BTJZ	%>80,FLAGS1,ENINT4	; enable INT4
+  491:  F290  A41000    	ORP	%>10,IOCNT0
+  492:  F293  0A        	RETS
+  493:                  
+  494:                  	; enable INT4
+  495:  F294  A40110    ENINT4	ORP	%>01,IOCNT1
+  496:  F297  0A        	RETS
+  497:                  
+  498:                  ;==============================================================================
+  499:                  
+  500:                  	; select input or output buffer and read/store byte in it
+  501:  F298  76020A2E  RWBUFR	BTJO	%>02,FLAGS1,RDBUF	; FLAGS1.1 set? Jump if yes (read from either buffer)
+  502:                  
+  503:                  	; write to input or output buffer
+  504:  F29C  76040A07  	BTJO	%>04,FLAGS1,WROBUF	; FLAGS1.2 set? Jump if yes (output buffer)
+  505:                  
+  506:                  	; write to input buffer
+  507:  F2A0  98050D    	MOVD	INWR,BUFPTR		; BUFPTR := INWR input buffer write ptr
+  508:  F2A3  DB34      	DECD	INFREE			; Decrement # of free input buffer bytes
+  509:  F2A5  E005      	JMP	WRBUF			; Store A in buffer
+  510:                  
+  511:                  	; write to output buffer
+  512:  F2A7  98090D    WROBUF	MOVD	OUTWR,BUFPTR		; BUFPTR := OUTWR output buffer write ptr
+  513:  F2AA  DB36      	DECD	OUTFREE			; Decr output buffer free size
+  514:                  
+  515:                  	; Write byte A to buffer
+  516:  F2AC  9B0D      WRBUF	STA	*BUFPTR			; *BUFPTR := A (store byte in buffer)
+  517:  F2AE  8A000D    	LDA	@XBUFPTR		; A := BUFPTR (why using LDA?)
+  518:  F2B1  78010D    	ADD	%>01,BUFPTRL		; Increment BUFPTR
+  519:  F2B4  79000C    	ADC	%>00,BUFPTRH
+  520:  F2B7  8EF311    	CALL	@ROLBUFP		; Roll BUFPTR if needed
+  521:  F2BA  76040A07  	BTJO	%>04,FLAGS1,WOBUFX	; FLAGS1.2 set? Jump if yes (output buffer)
+  522:  F2BE  980D05    	MOVD	BUFPTR,INWR		; INWR := BUFPTR (inp buffer write ptr)
+  523:  F2C1  8EF331    WRBUFX	CALL	@CHKBUF			; Check if inp or out buffer full or above HWM
+  524:  F2C4  0A        	RETS				; return
+  525:                  
+  526:  F2C5  980D09    WOBUFX	MOVD	BUFPTR,OUTWR		; OUTWR := BUFPTR (out buffer write ptr)
+  527:  F2C8  E0F7      	JMP	WRBUFX			; Check buffer and return
+  528:                  
+  529:                  	; read from input or output buffer
+  530:  F2CA  76040A0B  RDBUF	BTJO	%>04,FLAGS1,RDOBUF	; FLAGS1.2 set? jump if yes (output buffer)
+  531:                  
+  532:                  	; read from input buffer
+  533:  F2CE  98030D    	MOVD	INRD,BUFPTR		; BUFPTR := INRD input buffer read ptr
+  534:  F2D1  76020B0D  	BTJO	%>02,FLAGS2,RDBUF1	; FLAGS2.1 set? Jump if yes
+  535:  F2D5  D337      	INC	MATCHED			; inc MATCHED if not... (matched chars to discard)
+  536:  F2D7  E009      	JMP	RDBUF1			; Read byte
+  537:                  
+  538:                  	; read from output buffer
+  539:  F2D9  98070D    RDOBUF	MOVD	OUTRD,BUFPTR		; BUFPTR := OUTRD out buffer read ptr
+  540:  F2DC  D336      	INC	OUTFREL			; Inc OUTFREE = Out free bytes? (TODO: clarify)
+  541:  F2DE  E702      	JNC	RDBUF1
+  542:  F2E0  D335      	INC	OUTFREH
+  543:                  
+  544:                  	; Read A from buffer
+  545:  F2E2  9A0D      RDBUF1	LDA	*BUFPTR			; Read byte
+  546:  F2E4  76040A0B  	BTJO	%>04,FLAGS1,LF2F3	; FLAGS1.2 set? jump if yes (out buffer)
+  547:                  
+  548:  F2E8  278005    	BTJZ	%>80,A,LF2F0		; Is high bit set? Jump if not
+  549:  F2EB  74010A    	OR	%>01,FLAGS1		; FLAGS1.0 := A.7 = char high bit = delimiter flag
+  550:  F2EE  E003      	JMP	LF2F3
+  551:                  
+  552:  F2F0  73FE0A    LF2F0	AND	%>FE,FLAGS1		; clear FLAGS1.0 = delimiter flag
+  553:                  
+  554:                  	; Incr buffer read pointer
+  555:  F2F3  B8        LF2F3	PUSH	A
+  556:  F2F4  8A000D    	LDA	@XBUFPTR		; A := BUFPTR (why?)
+  557:  F2F7  78010D    	ADD	%>01,BUFPTRL		; increment BUFPTR
+  558:  F2FA  79000C    	ADC	%>00,BUFPTRH
+  559:  F2FD  8EF311    	CALL	@ROLBUFP		; Roll if needed
+  560:  F300  76040A05  	BTJO	%>04,FLAGS1,ROBUFX	; jump if output buffer
+  561:                  
+  562:                  	; update input buffer read ptr
+  563:  F304  980D03    	MOVD	BUFPTR,INRD		; INRD := BUFPTR
+  564:  F307  B9        	POP	A			; restore character
+  565:  F308  0A        	RETS				; return
+  566:                  
+  567:                  	; update output buffer read ptr
+  568:  F309  980D07    ROBUFX	MOVD	BUFPTR,OUTRD		; OUTRD := BUFPTR
+  569:  F30C  8EF335    	CALL	@CKOBUF			; Check if output buffer full or above HWM
+  570:  F30F  B9        	POP	A			; restore allophone
+  571:  F310  0A        	RETS
+  572:                  
+  573:                  ;==============================================================================
+  574:                  
+  575:                  	; Roll BUFPTR according to active buffer (FLAGS1.2)
+  576:                  	; - if FLAGS1.2 set (output buffer active):
+  577:                  	;	to OUTSTA (out buffer start) if reached OUTEND1 (out buffer end)
+  578:                  	; - if FLAGS1.2 not set (input buffer active):
+  579:                  	;	to INSTA (in buffer start)  if reached OUTSTA (in buffer end)
+  580:  F311  76040A0E  ROLBUFP	BTJO	%>04,FLAGS1,ROLOUT	; Roll output buffer
+  581:                  	; Roll input buffer
+  582:  F315  4D2B0D    ROLINP	CMP	OUTSTAL,BUFPTRL
+  583:  F318  E608      	JNZ	LF322
+  584:  F31A  4D2A0C    	CMP	OUTSTAH,BUFPTRH
+  585:  F31D  E603      	JNZ	LF322
+  586:  F31F  98290D    	MOVD	INSTA,BUFPTR
+  587:  F322  0A        LF322	RETS
+  588:                  
+  589:                  	; Roll output buffer
+  590:  F323  4D270D    ROLOUT	CMP	OUTEN1L,BUFPTRL
+  591:  F326  E608      	JNZ	LF330
+  592:  F328  4D260C    	CMP	OUTEN1H,BUFPTRH
+  593:  F32B  E603      	JNZ	LF330
+  594:  F32D  982B0D    	MOVD	OUTSTA,BUFPTR
+  595:  F330  0A        LF330	RETS
+  596:                  
+  597:                  ;==============================================================================
+  598:                  
+  599:                  	; Check if inp or out buffer full or above HWM
+  600:  F331  77040A12  CHKBUF	BTJZ	%>04,FLAGS1,CKIBUF	; Send XON/XOFF if needed
+  601:                  
+  602:                  	; Check if output buffer full or above high water mark
+  603:  F335  7D0135    CKOBUF	CMP	%>01,OUTFREH		; Only 1 free byte in output buffer?
+  604:  F338  E209      	JZ	LF343			; jump if yes
+  605:  F33A  4D3236    	CMP	OUTHWM,OUTFREL		; OUTFREE > OUTHWM? (output counter >= HWM?)
+  606:  F33D  E404      	JP	LF343			; jump if yes
+  607:  F33F  74080B    	OR	%>08,FLAGS2		; set FLAGS2.3 (output buffer full)
+  608:  F342  0A        	RETS
+  609:                  
+  610:  F343  73F70B    LF343	AND	%>F7,FLAGS2		; reset FLAGS2.3 (output buffer not full)
+  611:  F346  0A        	RETS
+  612:                  
+  613:                  	; Check if input buffer full or above high water mark
+  614:  F347  7D0033    CKIBUF	CMP	%>00,INFREEH		; Free bytes in input buffer?
+  615:  F34A  E40A      	JP	LF356			; jump if yes
+  616:  F34C  7D0134    	CMP	%>01,INFREEL
+  617:  F34F  E405      	JP	LF356
+  618:  F351  74200B    	OR	%>20,FLAGS2		; set FLAGS2.5 (input buffer full)
+  619:  F354  E01B      	JMP	TXOFF			; Send XOFF, clear DTR/BUSY*
+  620:                  
+  621:                  	; Input buffer not full
+  622:  F356  4D1E33    LF356	CMP	INLWMH,INFREEH		; INFREE inp buf free bytes < 1/2 size?
+  623:  F359  E107      	JN	LF362			; Jump if yes
+  624:  F35B  E41B      	JP	TXON			; Else send XON, set DTR/BUSY*
+  625:  F35D  4D1F34    	CMP	INLWML,INFREEL
+  626:  F360  E516      	JPZ	TXON
+  627:  F362  4D2033    LF362	CMP	INHWMH,INFREEH		; INFREE inp buf free bytes < 1/8 size?
+  628:  F365  E41D      	JP	LF384			; Jump if not
+  629:  F367  E105      	JN	LF36E			; Else Send XOFF, clear DTR/BUSY*
+  630:  F369  4D2134    	CMP	INHWML,INFREEL
+  631:  F36C  E416      	JP	LF384
+  632:                  
+  633:  F36E  74040B    LF36E	OR	%>04,FLAGS2		; set FLAGS2.2: input buffer above HWM
+  634:                  
+  635:                  	; Send XOFF, clear DTR/BUSY*
+  636:  F371  A3FE06    TXOFF	ANDP	%>FE,BPORT		; clear BPORT.0 (DSR/BUSY=true)
+  637:  F374  A21317    	MOVP	%>13,TXBUF		; TXBUF := XOFF
+  638:  F377  0A        	RETS
+  639:                  
+  640:                  	; Send XON, set DTR/BUSY*
+  641:  F378  73DB0B    TXON	AND	%>DB,FLAGS2
+  642:  F37B  8EF28C    	CALL	@ENINT			; FLAGS1:7 = parallel mode ? (enable INT3) : (enable INT4)
+  643:  F37E  A40106    	ORP	%>01,BPORT		; set BPORT.0 (DSR/BUSY=false)
+  644:  F381  A21117    	MOVP	%>11,TXBUF		; TXBUF := XON
+  645:  F384  0A        LF384	RETS				; Return
+  646:                  
+  647:                  ;==============================================================================
+  648:                  
+  649:                  	; INT1 handler (SP0256)
+  650:  F385  A3FE00    INT1	ANDP	%>FE,IOCNT0		; Disable IOCNT0.0 = INT1*
+  651:  F388  B8        	PUSH	A			; save regs
+  652:  F389  C8        	PUSH	B
+  653:  F38A  D80A      	PUSH	FLAGS1
+  654:  F38C  D80C      	PUSH	BUFPTRH
+  655:  F38E  D80D      	PUSH	BUFPTRL
+  656:  F390  74060A    	OR	%>06,FLAGS1		; select "read from output buffer"
+  657:  F393  8EF298    	CALL	@RWBUFR			; do the read
+  658:  F396  982D1B    	MOVD	PSP0256,ISP0256		; ISP0256 := PSP0256 SP0256 base address
+  659:  F399  48001B    	ADD	REGA,ISP0256		; Add allophone code to the address
+  660:  F39C  9B1B      	STA	*ISP0256		; Write any byte to that address (value doesn't care)
+  661:  F39E  D90D      	POP	BUFPTRL			; restore regs
+  662:  F3A0  D90C      	POP	BUFPTRH
+  663:  F3A2  D90A      	POP	FLAGS1
+  664:  F3A4  C9        	POP	B
+  665:  F3A5  B9        	POP	A
+  666:  F3A6  4D0709    	CMP	OUTRDL,OUTWRL		; Buffer empty?
+  667:  F3A9  E203      	JZ	LF3AE			; skip if yes
+  668:  F3AB  A40100    	ORP	%>01,IOCNT0		; else enable IOCNT0.0 = INT1*
+  669:  F3AE  0B        LF3AE	RETI				; return from interrupt
+  670:                  
+  671:                  ;==============================================================================
+  672:                  
+  673:                  	; select rules set
+  674:  F3AF  2D30      SELRUL	CMP	%>30,A			; A >='0'?
+  675:  F3B1  E502      	JPZ	SELRUL1			; jump if yes
+  676:  F3B3  E02A      	JMP	SELPCT			; < '0' => rules for punctuation
+  677:                  
+  678:  F3B5  2D3A      SELRUL1	CMP	%>3A,A			; A >='9'+1?
+  679:  F3B7  E508      	JPZ	SELRUL2			; jump if yes
+  680:  F3B9  88FF8E15  	MOVD	%RULNUM,RULPTR		; select rules for digits
+  681:  F3BD  73DF0A    	AND	%>DF,FLAGS1		; Non-letters rules
+  682:  F3C0  0A        	RETS				; done
+  683:                  
+  684:  F3C1  2D41      SELRUL2	CMP	%>41,A			; A >='A'?
+  685:  F3C3  E502      	JPZ	SELRUL3			; jump if yes
+  686:  F3C5  E018      	JMP	SELPCT			; < 'A' => rules for punctuation
+  687:                  
+  688:  F3C7  2D5B      SELRUL3	CMP	%>5B,A			; A >='Z'+1?
+  689:  F3C9  E504      	JPZ	SELRUL4			; jump if yes
+  690:  F3CB  74200A    	OR	%>20,FLAGS1		; Letters rules
+  691:  F3CE  0A        	RETS
+  692:                  
+  693:  F3CF  2D61      SELRUL4	CMP	%>61,A			; A >='a'?
+  694:  F3D1  E502      	JPZ	SELRUL5			; jump if yes
+  695:  F3D3  E00A      	JMP	SELPCT			; < 'a' => rules for punctuation
+  696:                  
+  697:  F3D5  2D7B      SELRUL5	CMP	%>7B,A			; A >='z'+1?
+  698:  F3D7  E506      	JPZ	SELPCT			; jump if yes
+  699:  F3D9  2A20      	SUB	%>20,A			; A -= $20 (convert to upper case)
+  700:  F3DB  74200A    	OR	%>20,FLAGS1		; Letters rules
+  701:  F3DE  0A        	RETS				; done
+  702:                  
+  703:  F3DF  73DF0A    SELPCT	AND	%>DF,FLAGS1		; Non-letters rules
+  704:  F3E2  88F78C15  	MOVD	%RLPNCT,RULPTR		; Rules for punctuation
+  705:  F3E6  0A        	RETS
+  706:                  
+  707:                  ;==============================================================================
+  708:                  
+  709:                  	; Encode text to allophones
+  710:  F3E7  7D0030    ENCODE	CMP	%>00,JEPROMH		; EPROM active?
+  711:                  	; Skip if not
+  712:  F3EA  E202      	JZ	ENCODE1
+  713:  F3EC  9C31      	BR	*JEPROM			; Jump in EPROM
+  714:                  
+  715:  F3EE  980311    ENCODE1	MOVD	INRD,INRDB		; INRDB := INRD (backward input buffer read ptr)
+  716:  F3F1  8EF74B    	CALL	@DECINRB		; dec INRDB and roll if needed
+  717:                  
+  718:                  	; Main encoder loop
+  719:  F3F4  8EF70F    ENCODL1	CALL	@FETCH			; Fetch char and mask high bit
+  720:  F3F7  77010A05  	BTJZ	%>01,FLAGS1,ENCODE2	; FLAGS2.7 := FLAGS1.0 (delimiter flag)
+  721:  F3FB  74800B    	OR	%>80,FLAGS2
+  722:  F3FE  E003      	JMP	ENCODE3
+  723:                  
+  724:  F400  737F0B    ENCODE2	AND	%>7F,FLAGS2
+  725:  F403  8EF3AF    ENCODE3	CALL	@SELRUL			; select rules set
+  726:  F406  77200A11  	BTJZ	%>20,FLAGS1,ENCODE4	; FLAGS1.5 set (rules for letters)? jump if no
+  727:                  
+  728:  F40A  C5        	CLR	B			; useful?
+  729:  F40B  2A41      	SUB	%>41,A			; A -= 'A'
+  730:  F40D  2C02      	MPY	%>02,A			; AB := A * 2
+  731:  F40F  5802      	ADD	%>02,B			; B += 2
+  732:  F411  AAFFBC    	LDA	@TABRUL(B)		; Index of rules tables
+  733:  F414  D014      	MOV	A,RULPTRH		; RULPTRH := MSB of letter rules table
+  734:  F416  AAFFBD    	LDA	@TABRU1(B)		; Index of rules tables LSB
+  735:  F419  D015      	MOV	A,RULPTRL		; RULPTRL := LSB of letter rules table
+  736:                  
+  737:  F41B  5201      ENCODE4	MOV	%>01,B			; B := 1 (number of '[') to seek
+  738:  F41D  8EF488    	CALL	@RSEEKB			; right seek 1st '['
+  739:                  
+  740:                  	; Loop 2: Compare chars between [ ]
+  741:  F420  8EF4C2    ENCODL2	CALL	@CMPBKT			; compare in-brackets
+  742:  F423  76100A40  	BTJO	%>10,FLAGS1,ENCODF1	; FLAGS1.4 set (match failed)? Jump if yes
+  743:                  
+  744:                  	; Check patterns after ]
+  745:  F427  98111D    	MOVD	INRDB,INRDLB		; INRDLB := INRDB (save backward input buffer read ptr)
+  746:  F42A  73BF0A    	AND	%>BF,FLAGS1		; clear FLAGS1.6 (read input using INRD)
+  747:  F42D  8EF564    	CALL	@CHKPAT			; Check rule pattern
+  748:  F430  76100A33  	BTJO	%>10,FLAGS1,ENCODF1	; FLAGS1.4 set (match failed)? Jump if yes
+  749:                  
+  750:                  	; Check patterns before [
+  751:  F434  8EF47E    	CALL	@LSEEKB			; left seek '['
+  752:  F437  74400A    	OR	%>40,FLAGS1		; set FLAGS1.6 (read input using INRDB)
+  753:  F43A  8EF564    	CALL	@CHKPAT			; Check rule pattern
+  754:  F43D  76100A39  	BTJO	%>10,FLAGS1,ENCODF2	; FLAGS1.4 set (match failed)? Jump if yes
+  755:                  
+  756:                  	; Matching Rule found
+  757:  F441  483734    	ADD	MATCHED,INFREEL		; INFREE += MATCHED (discard preceding chars)
+  758:  F444  790033    	ADC	%>00,INFREEH
+  759:  F447  D537      	CLR	MATCHED			; no more chars to discard
+  760:                  
+  761:                  	; Seek allophones to output
+  762:  F449  73FD0B    	AND	%>FD,FLAGS2		; clear FLAGS2.1 (allow to count chars to discard in MATCHED)
+  763:  F44C  5202      	MOV	%>02,B			; B := 2 (number of '[') to seek
+  764:  F44E  8EF488    	CALL	@RSEEKB			; right seek 2nd '[' => 1st allophone
+  765:                  
+  766:                  	; Write allophones
+  767:  F451  8EF49E    	CALL	@WRALLO			; Write allophones
+  768:                  
+  769:                  	; Next input character
+  770:  F454  980F03    	MOVD	INRDP,INRD		; INRD := INRDP - restore input buffer read ptr
+  771:  F457  980311    	MOVD	INRD,INRDB		; INRDB := INRD - copy to backward input buffer read ptr
+  772:  F45A  8EF74B    	CALL	@DECINRB		; dec INRDB and roll to INEND if == INSTA1
+  773:  F45D  77800B93  	BTJZ	%>80,FLAGS2,ENCODL1	; High bit of char was set (delimiter)? Jump if not
+  774:                  
+  775:                  	; Finalize and return
+  776:  F461  DB39      	DECD	INLEN			; dec INFREE (number of bytes in input buffer?)
+  777:  F463  8EF347    	CALL	@CKIBUF			; Check if input buffer full or above high water mark
+  778:  F466  0A        	RETS				; return
+  779:                  
+  780:                  	; Match failed after opening [ => seek next rule
+  781:  F467  D315      ENCODF1	INC	RULPTRL			; inc RULPTR rule pointer
+  782:  F469  E702      	JNC	DINC2
+  783:  F46B  D314      	INC	RULPTRH
+  784:  F46D  5202      DINC2	MOV	%>02,B			; B := 2 (number of '[') to seek
+  785:                  
+  786:                  	; Loop: Seek next rule opening [
+  787:  F46F  8EF488    ENCODL3	CALL	@RSEEKB			; right seek 2nd or 3rd '[' => next pattern '['
+  788:  F472  720137    	MOV	%>01,MATCHED		; MATCHED := 1 (one char to discard)
+  789:  F475  73FD0B    	AND	%>FD,FLAGS2		; clear FLAGS2.1 (allow to count chars to free in MATCHED)
+  790:  F478  E0A6      	JMP	ENCODL2			; check next rule
+  791:                  
+  792:                  	; Match failed before opening [ => seek next rule
+  793:  F47A  5203      ENCODF2	MOV	%>03,B			; B := 3 (number of '[') to seek
+  794:  F47C  E0F1      	JMP	ENCODL3			; right seek 3rd '[' and check next rule
+  795:                  
+  796:                  ;==============================================================================
+  797:                  
+  798:                  	; left seek '['
+  799:  F47E  9A15      LSEEKB	LDA	*RULPTR			; A := *RULPTR
+  800:  F480  274001    	BTJZ	%>40,A,LSEEBB1		; A.6 set ('[' found)? jump if not
+  801:  F483  0A        	RETS				; else return
+  802:                  
+  803:  F484  DB15      LSEEBB1	DECD	RULPTR			; dec RULPTR
+  804:  F486  E0F6      	JMP	LSEEKB			; and loop
+  805:                  
+  806:                  ;==============================================================================
+  807:                  
+  808:                  	; right seek Bth '['
+  809:  F488  D517      RSEEKB	CLR	COUNTER			; COUNTER := 0
+  810:                  
+  811:  F48A  9A15      RSEEKB1	LDA	*RULPTR			; A := *RULPTR
+  812:  F48C  274007    	BTJZ	%>40,A,RSEEKB2		; A.6 set ('[' found)? jump if not
+  813:  F48F  D317      	INC	COUNTER			; inc COUNTER
+  814:  F491  3D17      	CMP	COUNTER,B		; jump if COUNTER != B
+  815:  F493  E601      	JNZ	RSEEKB2
+  816:  F495  0A        	RETS				; else return: found
+  817:                  
+  818:  F496  D315      RSEEKB2	INC	RULPTRL			; inc RULPTR
+  819:  F498  E702      	JNC	DINC3
+  820:  F49A  D314      	INC	RULPTRH
+  821:  F49C  E0EC      DINC3	JMP	RSEEKB1			; and loop
+  822:                  
+  823:                  ;==============================================================================
+  824:                  
+  825:                  	; Write allophones
+  826:  F49E  D517      WRALLO	CLR	COUNTER			; COUNTER := 0 (flag for exit)
+  827:  F4A0  9A15      	LDA	*RULPTR			; A := *RULPTR
+  828:  F4A2  2DFF      	CMP	%>FF,A			; A == $FF?
+  829:  F4A4  E21B      	JZ	WRALLOX			; exit if yes: no allophone to send
+  830:  F4A6  278002    	BTJZ	%>80,A,WRALLO1		; A.7 set (']' found)? jump if not
+  831:  F4A9  D317      	INC	COUNTER			; else inc COUNTER
+  832:  F4AB  233F      WRALLO1	AND	%>3F,A			; mask A.6 and A.7
+  833:  F4AD  73FD0A    	AND	%>FD,FLAGS1		; clear FLAGS1.1 (write in buffer)
+  834:  F4B0  74040A    	OR	%>04,FLAGS1		; set FLAGS1.2 (output buffer)
+  835:  F4B3  8EF298    	CALL	@RWBUFR			; write allophone in buffer
+  836:  F4B6  D315      	INC	RULPTRL			; inc RULPTR
+  837:  F4B8  E702      	JNC	DINC4			;
+  838:  F4BA  D314      	INC	RULPTRH			;
+  839:  F4BC  7D0117    DINC4	CMP	%>01,COUNTER		; ']' found?
+  840:  F4BF  E6DD      	JNZ	WRALLO			; loop if not
+  841:  F4C1  0A        WRALLOX	RETS				; else return
+  842:                  
+  843:                  ;==============================================================================
+  844:                  
+  845:                  	; compare in-brackets
+  846:  F4C2  980313    CMPBKT	MOVD	INRD,INRDLX		; INRDLX := INRD (input read ptr)
+  847:  F4C5  73F70A    	AND	%>F7,FLAGS1		; clear FLAGS1.3
+  848:  F4C8  77200A08  	BTJZ	%>20,FLAGS1,CMPNLTR	; FLAGS1.5 letter rules? jump if not
+  849:  F4CC  9A15      	LDA	*RULPTR			; A := *RULPTR
+  850:  F4CE  2DFF      	CMP	%>FF,A			; A == $FF? (single letter/end of rules)
+  851:  F4D0  E60B      	JNZ	CMPLTR			; jump if not to letter rules
+  852:  F4D2  E02E      	JMP	CMPEND			; else exit (success)
+  853:                  
+  854:                  	; not letter rules: check 1st char, otherwise implicit
+  855:  F4D4  2DFF      CMPNLTR	CMP	%>FF,A			; A == $FF?
+  856:  F4D6  E22A      	JZ	CMPEND			; exit if yes (success)
+  857:  F4D8  8EF73B    	CALL	@DECINRD		; dec INRD and roll if needed
+  858:  F4DB  D237      	DEC	MATCHED			; dec MATCHED (matched chars to discard)
+  859:                  
+  860:                  	; letter rules
+  861:  F4DD  8EF70F    CMPLTR	CALL	@FETCH			; Fetch char and mask high bit
+  862:  F4E0  2D61      	CMP	%>61,A			; lower case?
+  863:  F4E2  E102      	JN	CMPLTR1			; skip if not
+  864:  F4E4  2A20      	SUB	%>20,A			; else adjust to upper case
+  865:  F4E6  2A20      CMPLTR1	SUB	%>20,A			; adjust to range 00-3F
+  866:  F4E8  C0        	MOV	A,B			; B := A
+  867:  F4E9  9A15      	LDA	*RULPTR			; A := *RULPTR
+  868:  F4EB  278003    	BTJZ	%>80,A,CMPLTR2		; A.7 set (']' found)? Skip if not
+  869:  F4EE  74080A    	OR	%>08,FLAGS1		; else set FLAGS1.3
+  870:  F4F1  233F      CMPLTR2	AND	%>3F,A			; mask A.6 and A.7
+  871:  F4F3  3D00      	CMP	REGA,B			; A == B?
+  872:  F4F5  E207      	JZ	CPMATCH			; jump if yes
+  873:  F4F7  74100A    	OR	%>10,FLAGS1		; set FLAGS1.4: pattern match failed
+  874:  F4FA  981303    	MOVD	INRDLX,INRD		; INRD := INRDLX
+  875:  F4FD  0A        	RETS				; return (failed)
+  876:                  
+  877:  F4FE  77080A0A  CPMATCH	BTJZ	%>08,FLAGS1,CMPNEXT	; FLAGS1.3 set (']' found)? Jump if not
+  878:                  
+  879:                  	; pattern match successful
+  880:  F502  98030F    CMPEND	MOVD	INRD,INRDP		; INRDP := INRD - save input buffer read ptr
+  881:  F505  73EF0A    	AND	%>EF,FLAGS1		; clear FLAGS1.4: pattern match successful
+  882:  F508  74020B    	OR	%>02,FLAGS2		; set FLAGS2.1 - forbid to count matched chars to discard
+  883:  F50B  0A        	RETS				; return
+  884:                  
+  885:                  	; next letter
+  886:  F50C  D315      CMPNEXT	INC	RULPTRL			; inc RULPTR
+  887:  F50E  E7CD      	JNC	CMPLTR			;
+  888:  F510  D314      	INC	RULPTRH			;
+  889:  F512  E0C9      	JMP	CMPLTR			; and loop: check next char
+  890:                  
+  891:                  ;==============================================================================
+  892:                  
+  893:                  	; Get letter flags
+  894:  F514  3216      GFLAGS	MOV	NXTCHR,B		; B := Next char
+  895:  F516  5D3A      	CMP	%>3A,B			; B > 'Z'-$20?
+  896:  F518  E40A      	JP	GFLAGX			; exit if yes
+  897:  F51A  5D21      	CMP	%>21,B			; B < 'A'-$20?
+  898:  F51C  E106      	JN	GFLAGX			; exit if yes
+  899:  F51E  5A21      	SUB	%>21,B			; B -= 'A' (could replace the CMP above!)
+  900:  F520  AAF526    	LDA	@LTFLGS(B)		; Letter flags
+  901:  F523  0A        	RETS				; done
+  902:                  
+  903:  F524  B5        GFLAGX	CLR	A			; non-letter => clear all flags
+  904:  F525  0A        	RETS				; done
+  905:                  
+  906:                  	; Letter flags
+  907:                  	; ------------
+  908:                  	; 7(80): Vowel
+  909:                  	; 6(40): Voiced consonant
+  910:                  	; 5(20): Sibilant
+  911:                  	; 4(10): Preceding long U
+  912:                  	; 3(08): Consonant
+  913:                  	; 2(04): Front vowel
+  914:                  	; 1(02): Back vowel
+  915:                  	; 0(01): Suffix ('E')
+  916:  F526  80        LTFLGS	BYTE	>80			; A 1000 0000 - EPROM sig check begin
+  917:  F527  48        	BYTE	>48			; B 0100 1000
+  918:  F528  28        	BYTE	>28			; C 0010 1000
+  919:  F529  58        	BYTE	>58			; D 0101 1000
+  920:  F52A  85        	BYTE	>85			; E 1000 0101 - EPROM sig check end
+  921:  F52B  08        	BYTE	>08			; F 0000 1000
+  922:  F52C  68        	BYTE	>68			; G 0110 1000
+  923:  F52D  08        	BYTE	>08			; H 0000 1000
+  924:  F52E  84        	BYTE	>84			; I 1000 0100
+  925:  F52F  78        	BYTE	>78			; J 0111 1000
+  926:  F530  08        	BYTE	>08			; K 0000 1000
+  927:  F531  58        	BYTE	>58			; L 0101 1000
+  928:  F532  48        	BYTE	>48			; M 0100 1000
+  929:  F533  58        	BYTE	>58			; N 0101 1000
+  930:  F534  82        	BYTE	>82			; O 1000 0010
+  931:  F535  08        	BYTE	>08			; P 0000 1000
+  932:  F536  08        	BYTE	>08			; Q 0000 1000
+  933:  F537  58        	BYTE	>58			; R 0101 1000
+  934:  F538  38        	BYTE	>38			; S 0011 1000
+  935:  F539  18        	BYTE	>18			; T 0001 1000
+  936:  F53A  82        	BYTE	>82			; U 1000 0010
+  937:  F53B  48        	BYTE	>48			; V 0100 1000
+  938:  F53C  48        	BYTE	>48			; W 0100 1000
+  939:  F53D  28        	BYTE	>28			; X 0010 1000
+  940:  F53E  84        	BYTE	>84			; Y 1000 0100
+  941:  F53F  78        	BYTE	>78			; Z 0111 1000
+  942:                  
+  943:                  ;==============================================================================
+  944:                  
+  945:                  	; Pattern jump table
+  946:  F540  8CF69E    PATBRT	BR	@PATVOW			; #	09	1+ vowels
+  947:  F543  8CF6B4    	BR	@PATVOC			; .	0A	voiced consonant: B D G J L M N R V W X
+  948:  F546  8CF601    	BR	@PATSUF			; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+  949:  F549  8CF6D7    	BR	@PATSIB			; &	0C	sibilant: S C G Z X J CH SH
+  950:  F54C  8CF6E2    	BR	@PATPLU			; @	0D	T S R D L Z N J TH CH SH preceding long U
+  951:  F54F  8CF6BF    	BR	@PAT1CO			; ^	0E	1 consonant only
+  952:  F552  8CF6C7    	BR	@PATFVO			; +	0F	front vowel: E I Y
+  953:  F555  8CF5EA    	BR	@PAT0MC			; :	10	0+ consonants
+  954:  F558  8CF5B9    	BR	@PAT1MC			; *	11	1+ consonants
+  955:  F55B  8CF6CF    	BR	@PATBVO			; >	12	back vowel: O U
+  956:  F55E  8CF5B0    	BR	@PATNLT			; <	13	Anything other than a letter
+  957:  F561  8CF5CC    	BR	@PAT2MV			; ?	14	2+ vowels
+  958:                  
+  959:                  ;==============================================================================
+  960:                  
+  961:                  	; Check rule pattern
+  962:  F564  76400A0A  CHKPAT	BTJO	%>40,FLAGS1,CKPATL1	; FLAGS1.6 set (scan direction left)? jump if yes
+  963:  F568  5240      	MOV	%>40,B			; '[' mask
+  964:  F56A  D315      	INC	RULPTRL			; inc RULPTR rule ptr
+  965:  F56C  E702      	JNC	DINC5
+  966:  F56E  D314      	INC	RULPTRH
+  967:  F570  E004      DINC5	JMP	CHKPAT1			; proceed
+  968:                  
+  969:  F572  5280      CKPATL1	MOV	%>80,B			; ']' mask
+  970:  F574  DB15      	DECD	RULPTR			; dec RULPTR rule ptr
+  971:                  
+  972:                  	; check if boundary has been reached
+  973:  F576  9A15      CHKPAT1	LDA	*RULPTR			; get rule char
+  974:  F578  6712      	BTJZ	B,A,CKPTCHR		; is '[' or ']'? jump if not
+  975:  F57A  76400A04  	BTJO	%>40,FLAGS1,CKPATL2	; FLAGS1.6 set (scan direction left)? jump if yes
+  976:  F57E  DB15      	DECD	RULPTR			; dec RULPTR rule ptr
+  977:  F580  E006      	JMP	DINC6
+  978:                  
+  979:  F582  D315      CKPATL2	INC	RULPTRL			; inc RULPTR rule ptr
+  980:  F584  E702      	JNC	DINC6
+  981:  F586  D314      	INC	RULPTRH
+  982:  F588  73EF0A    DINC6	AND	%>EF,FLAGS1		; clear FLAGS1.4 rule pattern match failed
+  983:  F58B  0A        	RETS				; return
+  984:                  
+  985:                  	; check rule char
+  986:  F58C  8EF75B    CKPTCHR	CALL	@GNEXT			; get next input char and move code to range 00-3F
+  987:  F58F  9A15      	LDA	*RULPTR			; A := *RULPTR - load rule char
+  988:  F591  2D15      	CMP	%>15,A			; A < $15? (pattern symbol)
+  989:  F593  E10F      	JN	CHKSYMB			; jump if yes
+  990:  F595  4D0016    CKNXCHR	CMP	REGA,NXTCHR		; otherwise compare input char with rule char
+  991:  F598  E2CA      	JZ	CHKPAT			; continue with next char if both chars match
+  992:                  
+  993:                  	; pattern match failed
+  994:  F59A  74100A    PATFLD	OR	%>10,FLAGS1		; set FLAGS1.4 - match failed
+  995:  F59D  981303    	MOVD	INRDLX,INRD		; INRD := INRDLX - restore input ptr
+  996:  F5A0  981D11    	MOVD	INRDLB,INRDB		; INRDB := INRDLB - restore backward input ptr
+  997:  F5A3  0A        	RETS				; return (failed)
+  998:                  
+  999:                  	; check rule pattern symbol
+ 1000:  F5A4  2D07      CHKSYMB	CMP	%>07,A			; is a "'"?
+ 1001:  F5A6  E2ED      	JZ	CKNXCHR			; jump if yes (apostrophe not a pattern symbol)
+ 1002:                  	; compute pattern symbol handler address
+ 1003:  F5A8  C0        	MOV	A,B			; B := A
+ 1004:  F5A9  5A09      	SUB	%>09,B			; B -= 9
+ 1005:  F5AB  5C03      	MPY	%>03,B			; B *= 3
+ 1006:  F5AD  ACF540    	BR	@PATBRT(B)		; Branch to PATBRT + B
+ 1007:                  
+ 1008:                  ;..............................................................................
+ 1009:                  	; <	13	Anything other than a letter
+ 1010:  F5B0  8EF514    PATNLT	CALL	@GFLAGS			; Get letter flags
+ 1011:  F5B3  2D00      	CMP	%>00,A			; Is a letter?
+ 1012:  F5B5  E247      	JZ	PATOK1			; Accept if yes
+ 1013:  F5B7  E0E1      	JMP	PATFLD			; else pattern match failed
+ 1014:                  
+ 1015:                  ;..............................................................................
+ 1016:                  	; *	11	1+ consonants
+ 1017:  F5B9  8EF514    PAT1MC	CALL	@GFLAGS			; Get letter flags
+ 1018:  F5BC  260802    	BTJO	%>08,A,PATL1MC		; Is a consonant? Jump if yes
+ 1019:  F5BF  E0D9      	JMP	PATFLD			; else pattern match failed
+ 1020:                  
+ 1021:  F5C1  8EF75B    PATL1MC	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1022:  F5C4  8EF514    	CALL	@GFLAGS			; Get letter flags
+ 1023:  F5C7  2608F7    	BTJO	%>08,A,PATL1MC		; Is a consonant? Loop until not
+ 1024:  F5CA  E02F      	JMP	PATOK0			; Unget and Accept rule
+ 1025:                  
+ 1026:                  ;..............................................................................
+ 1027:                  	; ?	14	2+ vowels
+ 1028:  F5CC  8EF514    PAT2MV	CALL	@GFLAGS			; Get letter flags
+ 1029:  F5CF  268002    	BTJO	%>80,A,PAT2MV1		; Vowel flag? Jump if yes
+ 1030:  F5D2  E0C6      	JMP	PATFLD			; pattern match failed
+ 1031:                  
+ 1032:  F5D4  8EF75B    PAT2MV1	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1033:  F5D7  8EF514    	CALL	@GFLAGS			; Get letter flags
+ 1034:  F5DA  268002    	BTJO	%>80,A,PATL2MV		; Vowel flag? Jump if yes
+ 1035:  F5DD  E0BB      	JMP	PATFLD			; pattern match failed
+ 1036:                  
+ 1037:  F5DF  8EF75B    PATL2MV	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1038:  F5E2  8EF514    	CALL	@GFLAGS			; Get letter flags
+ 1039:  F5E5  2680F7    	BTJO	%>80,A,PATL2MV		; Vowel flag? Loop until not
+ 1040:  F5E8  E011      	JMP	PATOK0			; Unget and accept rule
+ 1041:                  
+ 1042:                  ;..............................................................................
+ 1043:                  	; :	10	0+ consonants
+ 1044:  F5EA  8EF514    PAT0MC	CALL	@GFLAGS			; Get letter flags
+ 1045:  F5ED  260802    	BTJO	%>08,A,PATL0MC		; Consonant? Jump if yes
+ 1046:  F5F0  E009      	JMP	PATOK0			; else unget and accept rule
+ 1047:                  
+ 1048:  F5F2  8EF75B    PATL0MC	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1049:  F5F5  8EF514    	CALL	@GFLAGS			; Get letter flags
+ 1050:  F5F8  2608F7    	BTJO	%>08,A,PATL0MC		; Is a consonant? Loop until not
+ 1051:                  
+ 1052:                  	; Unget and accept rule
+ 1053:  F5FB  8EF77F    PATOK0	CALL	@UNGET			; Unget last input character
+ 1054:                  
+ 1055:                  	; pattern match ok
+ 1056:  F5FE  8CF564    PATOK1	BR	@CHKPAT			; Check next rule pattern
+ 1057:                  
+ 1058:                  ;..............................................................................
+ 1059:                  	; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+ 1060:  F601  8EF514    PATSUF	CALL	@GFLAGS			; Get letter flags
+ 1061:  F604  260150    	BTJO	%>01,A,PS_E		; Suffix flag ('-E')? Jump if yes
+ 1062:  F607  7D2916    	CMP	%>29,NXTCHR		; 'I'? (-I*)
+ 1063:  F60A  E230      	JZ	PS_I			; Jump if yes
+ 1064:  F60C  7D2D16    	CMP	%>2D,NXTCHR		; 'M'? (-M*)
+ 1065:  F60F  E207      	JZ	PS_M			; Jump if yes
+ 1066:  F611  7D2F16    	CMP	%>2F,NXTCHR		; 'O'? (-O*)
+ 1067:  F614  E21D      	JZ	PS_O			; jump if yes
+ 1068:  F616  E071      	JMP	PATFL1			; pattern match failed
+ 1069:                  
+ 1070:                  	; found '-M'
+ 1071:  F618  8EF70F    PS_M	CALL	@FETCH			; Fetch char and mask high bit
+ 1072:  F61B  2D45      	CMP	%>45,A			; 'E'?  (-ME*)
+ 1073:  F61D  E202      	JZ	PS_ME			; jump if yes
+ 1074:  F61F  E068      	JMP	PATFL1			; pattern match failed
+ 1075:                  
+ 1076:                  	; found '-ME'
+ 1077:  F621  8EF70F    PS_ME	CALL	@FETCH			; Fetch char and mask high bit
+ 1078:  F624  2D4E      	CMP	%>4E,A			; 'N'?  (-MEN*)
+ 1079:  F626  E202      	JZ	PS_MEN			; jump if yes
+ 1080:  F628  E05F      	JMP	PATFL1			; pattern match failed
+ 1081:                  
+ 1082:                  	; found '-MEN'
+ 1083:  F62A  8EF70F    PS_MEN	CALL	@FETCH			; Fetch char and mask high bit
+ 1084:  F62D  2D54      	CMP	%>54,A			; 'T'? (-MENT)
+ 1085:  F62F  E21D      	JZ	PATCKSU			; jump if yes, suffix -MENT found
+ 1086:  F631  E056      	JMP	PATFL1			; pattern match failed
+ 1087:                  
+ 1088:                  	; Found '-O' (-OR)
+ 1089:  F633  8EF70F    PS_O	CALL	@FETCH			; Fetch char and mask high bit
+ 1090:  F636  2D52      	CMP	%>52,A			; 'R'? (-OR)
+ 1091:  F638  E214      	JZ	PATCKSU			; jump if yes, suffix -OR found
+ 1092:  F63A  E04D      	JMP	PATFL1			; pattern match failed
+ 1093:                  
+ 1094:                  	; Found '-I' (-ING)
+ 1095:  F63C  8EF70F    PS_I	CALL	@FETCH			; Fetch char and mask high bit
+ 1096:  F63F  2D4E      	CMP	%>4E,A			; 'N'? (-IN*)
+ 1097:  F641  E202      	JZ	PS_IN			; jump if yes
+ 1098:  F643  E044      	JMP	PATFL1			; pattern match failed
+ 1099:                  
+ 1100:                  	; found '-IN'
+ 1101:  F645  8EF70F    PS_IN	CALL	@FETCH			; Fetch char and mask high bit
+ 1102:  F648  2D47      	CMP	%>47,A			; 'G'? (-ING)
+ 1103:  F64A  E202      	JZ	PATCKSU			; jump if yes, suffix -ING found
+ 1104:  F64C  E03B      	JMP	PATFL1			; pattern match failed
+ 1105:                  
+ 1106:                  	; Suffix found: check that no letter follows
+ 1107:  F64E  8EF68C    PATCKSU	CALL	@CHKLTR			; Check if next input char is a letter
+ 1108:  F651  76200A34  	BTJO	%>20,FLAGS1,PATFL1	; pattern match failed
+ 1109:  F655  E065      	JMP	PATOK2			; Accept rule
+ 1110:                  
+ 1111:                  	; found '-E' (-ER, -ERS, -ES, -ED, -ELY)
+ 1112:  F657  8EF70F    PS_E	CALL	@FETCH			; Fetch char and mask high bit
+ 1113:  F65A  2D52      	CMP	%>52,A			; 'R'? (-ER)
+ 1114:  F65C  E60C      	JNZ	PS_E1			; jump if not
+ 1115:  F65E  8EF70F    	CALL	@FETCH			; Fetch char and mask high bit
+ 1116:  F661  2D53      	CMP	%>53,A			; 'S'? (optional plural -ERS)
+ 1117:  F663  E2E9      	JZ	PATCKSU			; jump if yes, suffix -ERS found
+ 1118:  F665  8EF73B    	CALL	@DECINRD		; dec INRD and roll if needed
+ 1119:  F668  E0E4      	JMP	PATCKSU			; suffix -ER found
+ 1120:                  
+ 1121:  F66A  2D53      PS_E1	CMP	%>53,A			; 'S' (-ES)
+ 1122:  F66C  E2E0      	JZ	PATCKSU			; jump if yes, suffix -ES found
+ 1123:  F66E  2D44      	CMP	%>44,A			; 'D' (-ED)
+ 1124:  F670  E2DC      	JZ	PATCKSU			; jump if yes, suffix -ED found
+ 1125:  F672  2D4C      	CMP	%>4C,A			; 'L' (-EL*)
+ 1126:  F674  E20C      	JZ	PS_EL			; jump if yes
+ 1127:  F676  8EF73B    	CALL	@DECINRD		; dec INRD and roll if needed
+ 1128:                  					; suffix -E found
+ 1129:  F679  8EF68C    	CALL	@CHKLTR			; Check if next input char is a letter
+ 1130:  F67C  77200A3C  	BTJZ	%>20,FLAGS1,PATOK2	; Jump if FLAGS1.5 unset (not a letter => OK)
+ 1131:  F680  E007      	JMP	PATFL1			; pattern match failed
+ 1132:                  
+ 1133:                  	; found '-EL'
+ 1134:  F682  8EF70F    PS_EL	CALL	@FETCH			; Fetch char and mask high bit
+ 1135:  F685  2D59      	CMP	%>59,A			; 'Y'? (-ELY)
+ 1136:  F687  E2C5      	JZ	PATCKSU			; jump if yes, suffix -ELY found
+ 1137:                  
+ 1138:                  	; pattern match failed
+ 1139:  F689  8CF59A    PATFL1	BR	@PATFLD			; pattern match failed
+ 1140:                  
+ 1141:                  
+ 1142:                  	; Test if next input char is a letter, FLAGS1.5=1 if yes
+ 1143:  F68C  8EF70F    CHKLTR	CALL	@FETCH			; Fetch char and mask high bit
+ 1144:  F68F  D815      	PUSH	RULPTRL			; save RULPTR
+ 1145:  F691  D814      	PUSH	RULPTRH
+ 1146:  F693  8EF3AF    	CALL	@SELRUL			; select rules set, test if letter rule
+ 1147:  F696  D914      	POP	RULPTRH			; restore RULPTR
+ 1148:  F698  D915      	POP	RULPTRL
+ 1149:  F69A  8EF73B    	CALL	@DECINRD		; dec INRD and roll if needed
+ 1150:  F69D  0A        	RETS				; return FLAGS1.5=1 if letter
+ 1151:                  
+ 1152:                  ;..............................................................................
+ 1153:                  	; #	09	1+ vowels
+ 1154:  F69E  8EF514    PATVOW	CALL	@GFLAGS			; Get letter flags
+ 1155:  F6A1  268002    	BTJO	%>80,A,PATVOW1		; Vowel flag? Jump if yes
+ 1156:  F6A4  E0E3      	JMP	PATFL1			; pattern match failed
+ 1157:                  
+ 1158:  F6A6  8EF75B    PATVOW1	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1159:  F6A9  8EF514    	CALL	@GFLAGS			; Get letter flags
+ 1160:  F6AC  2680F7    	BTJO	%>80,A,PATVOW1		; Vowel flag? Loop until not
+ 1161:  F6AF  8EF77F    	CALL	@UNGET			; Unget input character
+ 1162:  F6B2  E008      	JMP	PATOK2			; Accept rule
+ 1163:                  
+ 1164:                  ;..............................................................................
+ 1165:                  	; .	0A	voiced consonant: B D G J L M N R V W X
+ 1166:  F6B4  8EF514    PATVOC	CALL	@GFLAGS			; Get letter flags
+ 1167:  F6B7  264002    	BTJO	%>40,A,PATOK2		; Voiced consonant flag? Accept if yes
+ 1168:  F6BA  E0CD      	JMP	PATFL1			; pattern match failed
+ 1169:                  
+ 1170:  F6BC  8CF564    PATOK2	BR	@CHKPAT			; Check rule pattern
+ 1171:                  
+ 1172:                  ;..............................................................................
+ 1173:                  	; ^	0E	1 consonant only
+ 1174:  F6BF  8EF514    PAT1CO	CALL	@GFLAGS			; Get letter flags
+ 1175:  F6C2  2608F7    	BTJO	%>08,A,PATOK2		; Consonant flag? Accept if yes
+ 1176:  F6C5  E0C2      	JMP	PATFL1			; pattern match failed
+ 1177:                  
+ 1178:                  ;..............................................................................
+ 1179:                  	; +	0F	front vowel: E I Y
+ 1180:  F6C7  8EF514    PATFVO	CALL	@GFLAGS			; Get letter flags
+ 1181:  F6CA  2604EF    	BTJO	%>04,A,PATOK2		; Front vowel flag? Accept if yes
+ 1182:  F6CD  E0BA      	JMP	PATFL1			; pattern match failed
+ 1183:                  
+ 1184:                  ;..............................................................................
+ 1185:                  	; >	12	back vowel: O U
+ 1186:  F6CF  8EF514    PATBVO	CALL	@GFLAGS			; Get letter flags
+ 1187:  F6D2  2602E7    	BTJO	%>02,A,PATOK2		; Back vowel flag? Accept if yes
+ 1188:  F6D5  E0B2      	JMP	PATFL1			; pattern match failed
+ 1189:                  
+ 1190:                  ;..............................................................................
+ 1191:                  	; &	0C	sibilant: S C G Z X J CH SH
+ 1192:  F6D7  8EF514    PATSIB	CALL	@GFLAGS			; Get letter flags
+ 1193:  F6DA  2620DF    	BTJO	%>20,A,PATOK2		; Sibilant flag? Accept if yes
+ 1194:  F6DD  8EF75B    	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1195:  F6E0  E00E      	JMP	PATCSH			; check for CH or SH
+ 1196:                  
+ 1197:                  ;..............................................................................
+ 1198:                  	; @	0D	T S R D L Z N J TH CH SH preceding long U
+ 1199:  F6E2  8EF514    PATPLU	CALL	@GFLAGS			; Get letter flags
+ 1200:  F6E5  2610D4    	BTJO	%>10,A,PATOK2		; Letter influencing long U flag? Accept if yes
+ 1201:                  					; (Could have checked for 'H' here...)
+ 1202:  F6E8  8EF75B    	CALL	@GNEXT			; get next char and move code to range 00-3F
+ 1203:  F6EB  7D3416    	CMP	%>34,NXTCHR		; 'T'?
+ 1204:  F6EE  E20C      	JZ	PATTCSH			; jump if yes
+ 1205:  F6F0  7D2316    PATCSH	CMP	%>23,NXTCHR		; 'C'?
+ 1206:  F6F3  E207      	JZ	PATTCSH			; jump if yes
+ 1207:  F6F5  7D3316    	CMP	%>33,NXTCHR		; 'S'?
+ 1208:  F6F8  E202      	JZ	PATTCSH			; jump if yes
+ 1209:  F6FA  E08D      	JMP	PATFL1			; pattern match failed
+ 1210:                  
+ 1211:                  	; check for TH, CH or SH
+ 1212:  F6FC  981103    PATTCSH	MOVD	INRDB,INRD		; INRD := INRDB
+ 1213:  F6FF  8EF72B    	CALL	@INCINRD		; inc INRD and roll if needed
+ 1214:  F702  8EF72B    	CALL	@INCINRD		; inc INRD and roll if needed
+ 1215:  F705  8EF70F    	CALL	@FETCH			; Fetch char and mask high bit
+ 1216:  F708  2D48      	CMP	%>48,A			; 'H'
+ 1217:  F70A  E2B0      	JZ	PATOK2			; Accept if yes
+ 1218:  F70C  8CF59A    	BR	@PATFLD			; pattern match failed
+ 1219:                  
+ 1220:                  ;==============================================================================
+ 1221:                  
+ 1222:                  	; Fetch char and mask high bit
+ 1223:  F70F  74020A    FETCH	OR	%>02,FLAGS1		; FLAGS1.1 = 1 - sel buffer read mode
+ 1224:  F712  73FB0A    	AND	%>FB,FLAGS1		; FLAGS1.2 = 0 - sel input buffer
+ 1225:  F715  8EF298    	CALL	@RWBUFR			; read in input buffer (FLAGS1.0 set if delimiter)
+ 1226:  F718  237F      	AND	%>7F,A			; mask high bit of char (delimiter flag)
+ 1227:  F71A  0A        	RETS				; return
+ 1228:                  
+ 1229:                  ;==============================================================================
+ 1230:                  
+ 1231:                  	; inc INRDB and roll if needed
+ 1232:  F71B  D311      INCINRB	INC	INRDBL			; inc INRDB
+ 1233:  F71D  E702      	JNC	DINC7
+ 1234:  F71F  D310      	INC	INRDBH
+ 1235:  F721  98110D    DINC7	MOVD	INRDB,BUFPTR		; BUFPTR := INRDB
+ 1236:  F724  8EF315    	CALL	@ROLINP			; Roll input buffer BUFPTR
+ 1237:  F727  980D11    	MOVD	BUFPTR,INRDB		; INRDB := BUFPTR
+ 1238:  F72A  0A        	RETS
+ 1239:                  
+ 1240:                  ;==============================================================================
+ 1241:                  
+ 1242:                  	; inc INRD and roll if needed
+ 1243:  F72B  D303      INCINRD	INC	INRDL			; inc INRD
+ 1244:  F72D  E702      	JNC	DINC8
+ 1245:  F72F  D302      	INC	INRDH
+ 1246:  F731  98030D    DINC8	MOVD	INRD,BUFPTR		; BUFPTR := INRD
+ 1247:  F734  8EF315    	CALL	@ROLINP			; Roll input buffer BUFPTR
+ 1248:  F737  980D03    	MOVD	BUFPTR,INRD		; INRD := BUFPTR
+ 1249:  F73A  0A        	RETS
+ 1250:                  
+ 1251:                  ;==============================================================================
+ 1252:                  
+ 1253:                  	; dec INRD and roll if needed
+ 1254:  F73B  DB03      DECINRD	DECD	INRD			; dec INRD
+ 1255:  F73D  4D2303    	CMP	INSTA1L,INRDL		; before input buffer start?
+ 1256:  F740  E608      	JNZ	DECIRD1
+ 1257:  F742  4D2202    	CMP	INSTA1H,INRDH
+ 1258:  F745  E603      	JNZ	DECIRD1			; jump if not
+ 1259:  F747  982503    	MOVD	INEND,INRD		; roll to input buffer end
+ 1260:  F74A  0A        DECIRD1	RETS				; return
+ 1261:                  
+ 1262:                  ;==============================================================================
+ 1263:                  
+ 1264:                  	; dec INRDB and roll if needed
+ 1265:  F74B  DB11      DECINRB	DECD	INRDB			; dec INRDB
+ 1266:  F74D  4D2311    	CMP	INSTA1L,INRDBL		; before input buffer start?
+ 1267:  F750  E608      	JNZ	LF75A
+ 1268:  F752  4D2210    	CMP	INSTA1H,INRDBH
+ 1269:  F755  E603      	JNZ	LF75A			; jump if not
+ 1270:  F757  982511    	MOVD	INEND,INRDB		; roll to input buffer end
+ 1271:  F75A  0A        LF75A	RETS				; return
+ 1272:                  
+ 1273:                  ;==============================================================================
+ 1274:                  
+ 1275:                  	; get next char and move code to range 00-3F
+ 1276:  F75B  77400A07  GNEXT	BTJZ	%>40,FLAGS1,GNEXT1	; FLAGS1.6 set? jump if not (scan right)
+ 1277:  F75F  D803      	PUSH	INRDL			; else save INRD
+ 1278:  F761  D802      	PUSH	INRDH			;
+ 1279:  F763  981103    	MOVD	INRDB,INRD		; and move INRDB to INRD (backward read pointer)
+ 1280:  F766  8EF70F    GNEXT1	CALL	@FETCH			; Fetch char and mask high bit
+ 1281:  F769  77400A07  	BTJZ	%>40,FLAGS1,GNEXT2	; FLAGS1.6 set? jump if not (scan right)
+ 1282:  F76D  8EF74B    	CALL	@DECINRB		; else dec INRDB and roll if needed (scan left)
+ 1283:  F770  D902      	POP	INRDH			; and restore INRD
+ 1284:  F772  D903      	POP	INRDL			;
+ 1285:  F774  2D61      GNEXT2	CMP	%>61,A			; lower case?
+ 1286:  F776  E102      	JN	GNEXT3			; jump if not
+ 1287:  F778  2A20      	SUB	%>20,A			; change to upper case (bug: should be done in FETCH!)
+ 1288:  F77A  2A20      GNEXT3	SUB	%>20,A			; shift to range 00-3F
+ 1289:  F77C  D016      	MOV	A,NXTCHR		; store in NXTCHR
+ 1290:  F77E  0A        	RETS				; return
+ 1291:                  
+ 1292:                  ;==============================================================================
+ 1293:                  
+ 1294:                  	; Unget last input character
+ 1295:  F77F  76400A04  UNGET	BTJO	%>40,FLAGS1,UNGET1	; FLAGS1.6 set? jump if yes
+ 1296:  F783  8EF73B    	CALL	@DECINRD		; dec INRD (input buffer read ptr) and roll if needed
+ 1297:  F786  0A        	RETS
+ 1298:                  
+ 1299:  F787  8EF71B    UNGET1	CALL	@INCINRB		; inc INRDB (backward input buffer read ptr) and roll if needed
+ 1300:  F78A  0A        	RETS
+ 1301:                  
+ 1302:                  
+ 1303:                  ;==============================================================================
+ 1304:                  
+ 1305:  F78B  FF        	BYTE	>FF			; boundary
+ 1306:                  
+ 1307:                  	; Rules for punctuation
+ 1308:  F78C  CDC00A47  RLPNCT	BYTE	>CD,>C0,>0A,>47,>B3,>EB,>09,>10
+              B3EB0910
+ 1309:  F794  0A2547B3  	BYTE	>0A,>25,>47,>B3,>EB,>09,>47,>B3
+              EB0947B3
+ 1310:  F79C  EB47B3F7  	BYTE	>EB,>47,>B3,>F7,>C7,>FF,>CC,>C3
+              C7FFCCC3
+ 1311:  F7A4  DBC3C0C1  	BYTE	>DB,>C3,>C0,>C1,>CE,>44,>84,>C1
+              CE4484C1
+ 1312:  F7AC  4484DF44  	BYTE	>44,>84,>DF,>44,>84,>DA,>C4,>C5
+              84DAC4C5
+ 1313:  F7B4  49343737  	BYTE	>49,>34,>37,>37,>07,>0B,>0D,>80
+              070B0D80
+ 1314:  F7BC  C461182D  	BYTE	>C4,>61,>18,>2D,>33,>2B,>80,>C3
+              332B80C3
+ 1315:  F7C4  780F101C  	BYTE	>78,>0F,>10,>1C,>33,>80,>FF,>C2
+              3380FFC2
+ 1316:                  	; Rules for 'A'
+ 1317:  F7CC  13FF13D4  RULESA	BYTE	>13,>FF,>13,>D4,>63,>28,>A5,>54
+              6328A554
+ 1318:  F7D4  02A9FF13  	BYTE	>02,>A9,>FF,>13,>CF,>13,>72,>A5
+              CF1372A5
+ 1319:  F7DC  13FB0EF3  	BYTE	>13,>FB,>0E,>F3,>09,>54,>B7,>13
+              0954B713
+ 1320:  F7E4  F22F4FA7  	BYTE	>F2,>2F,>4F,>A7,>13,>FF,>0E,>32
+              13FF0E32
+ 1321:  F7EC  CFF209EF  	BYTE	>CF,>F2,>09,>EF,>13,>10,>6E,>B9
+              13106EB9
+ 1322:  F7F4  470B9367  	BYTE	>47,>0B,>93,>67,>21,>29,>AE,>4F
+              2129AE4F
+ 1323:  F7FC  01240707  	BYTE	>01,>24,>07,>07,>8B,>FF,>37,>21
+              8BFF3721
+ 1324:  F804  CFF75797  	BYTE	>CF,>F7,>57,>97,>13,>10,>FF,>0E
+              1310FF0E
+ 1325:  F80C  0F13D413  	BYTE	>0F,>13,>D4,>13,>FF,>0E,>09,>CF
+              FF0E09CF
+ 1326:  F814  FF0E0F09  	BYTE	>FF,>0E,>0F,>09,>D4,>09,>10,>6C
+              D409106C
+ 1327:  F81C  2CB94F2D  	BYTE	>2C,>B9,>4F,>2D,>93,>13,>EC,>09
+              9313EC09
+ 1328:  F824  4FAD0910  	BYTE	>4F,>AD,>09,>10,>E7,>25,>4C,>01
+              E7254C01
+ 1329:  F82C  8AFF0E0B  	BYTE	>8A,>FF,>0E,>0B,>D4,>FF,>0E,>0F
+              D4FF0E0F
+ 1330:  F834  1009DA13  	BYTE	>10,>09,>DA,>13,>72,>B2,>4F,>A7
+              72B24FA7
+ 1331:  F83C  72B25AA7  	BYTE	>72,>B2,>5A,>A7,>13,>10,>F2,>13
+              1310F213
+ 1332:  F844  FBF213F3  	BYTE	>FB,>F2,>13,>F3,>F2,>FB,>69,>B2
+              F2FB69B2
+ 1333:  F84C  47AFE9D4  	BYTE	>47,>AF,>E9,>D4,>F9,>D4,>F5,>D7
+              F9D4F5D7
+ 1334:  F854  0910EC13  	BYTE	>09,>10,>EC,>13,>FE,>09,>10,>6C
+              FE09106C
+ 1335:  F85C  B3137EAB  	BYTE	>B3,>13,>7E,>AB,>6C,>AB,>57,>02
+              6CAB5702
+ 1336:  F864  A9FF2C0E  	BYTE	>A9,>FF,>2C,>0E,>D7,>13,>10,>62
+              D7131062
+ 1337:  F86C  2CA55401  	BYTE	>2C,>A5,>54,>01,>3F,>BE,>62,>2C
+              3FBE622C
+ 1338:  F874  A54F013F  	BYTE	>A5,>4F,>01,>3F,>BE,>6E,>A7,>0F
+              BE6EA70F
+ 1339:  F87C  540B018A  	BYTE	>54,>0B,>01,>8A,>FF,>DA
+              FFDA
+ 1340:                  	; Rules for 'B'
+ 1341:  F882  13FF1341  RULESB	BYTE	>13,>FF,>13,>41,>3F,>93,>2D,>21
+              3F932D21
+ 1342:  F88A  39E57F93  	BYTE	>39,>E5,>7F,>93,>13,>E5,>0E,>09
+              13E50E09
+ 1343:  F892  413F9313  	BYTE	>41,>3F,>93,>13,>65,>25,>AE,>13
+              6525AE13
+ 1344:  F89A  7F0C8B13  	BYTE	>7F,>0C,>8B,>13,>6F,>34,>A8,>13
+              6F34A813
+ 1345:  F8A2  413F359D  	BYTE	>41,>3F,>35,>9D,>13,>75,>B3,>09
+              1375B309
+ 1346:  F8AA  413F0CAB  	BYTE	>41,>3F,>0C,>AB,>75,>29,>AC,>41
+              7529AC41
+ 1347:  F8B2  3F0C0CAD  	BYTE	>3F,>0C,>0C,>AD,>FF,>22,>FF,>FF
+              FF22FFFF
+ 1348:  F8BA  13419CFF  	BYTE	>13,>41,>9C,>FF,>33,>41,>9C,>F4
+              33419CF4
+ 1349:  F8C2  428D13FF  	BYTE	>42,>8D,>13,>FF,>0E,>41,>9C,>FF
+              0E419CFF
+ 1350:  F8CA  41BF      	BYTE	>41,>BF
+ 1351:                  	; Rules for 'C'
+ 1352:  F8CC  13FF1377  RULESC	BYTE	>13,>FF,>13,>77,>37,>93,>13,>E8
+              379313E8
+ 1353:  F8D4  0E42AA0E  	BYTE	>0E,>42,>AA,>0E,>25,>E8,>42,>AA
+              25E842AA
+ 1354:  F8DC  E842B233  	BYTE	>E8,>42,>B2,>33,>E9,>09,>77,>37
+              E9097737
+ 1355:  F8E4  86E909E5  	BYTE	>86,>E9,>09,>E5,>E9,>2F,>E5,>E9
+              E92FE5E9
+ 1356:  F8EC  252EE5FF  	BYTE	>25,>2E,>E5,>FF,>0F,>77,>B7,>23
+              0F77B723
+ 1357:  F8F4  FFFFEB09  	BYTE	>FF,>FF,>EB,>09,>42,>AA,>EB,>42
+              42AAEB42
+ 1358:  F8FC  A96FAD0B  	BYTE	>A9,>6F,>AD,>0B,>42,>08,>0F,>90
+              42080F90
+ 1359:  F904  E30F422A  	BYTE	>E3,>0F,>42,>2A,>37,>B7,>FF,>13
+              37B7FF13
+ 1360:  F90C  42A9FF33  	BYTE	>42,>A9,>FF,>33,>42,>A9,>FF,>12
+              42A9FF12
+ 1361:  F914  4288FF42  	BYTE	>42,>88,>FF,>42,>AA
+              AA
+ 1362:                  	; Rules for 'D'
+ 1363:  F919  13FF1341  RULESD	BYTE	>13,>FF,>13,>41,>21,>93,>FF,>24
+              2193FF24
+ 1364:  F921  FF091065  	BYTE	>FF,>09,>10,>65,>A4,>13,>41,>21
+              A4134121
+ 1365:  F929  0C01950A  	BYTE	>0C,>01,>95,>0A,>25,>FF,>13,>41
+              25FF1341
+ 1366:  F931  95091125  	BYTE	>95,>09,>11,>25,>FF,>13,>42,>8D
+              FF13428D
+ 1367:  F939  13E50E09  	BYTE	>13,>E5,>0E,>09,>41,>21,>8C,>13
+              41218C13
+ 1368:  F941  EF134121  	BYTE	>EF,>13,>41,>21,>9F,>13,>6F,>25
+              9F136F25
+ 1369:  F949  B341210F  	BYTE	>B3,>41,>21,>0F,>AB,>13,>6F,>29
+              AB136F29
+ 1370:  F951  2EA74121  	BYTE	>2E,>A7,>41,>21,>1F,>0C,>AC,>13
+              1F0CAC13
+ 1371:  F959  6FB74121  	BYTE	>6F,>B7,>41,>21,>A0,>09,>F5,>10
+              A009F510
+ 1372:  F961  21410A96  	BYTE	>21,>41,>0A,>96,>E7,>41,>8A,>EA
+              E7418AEA
+ 1373:  F969  418AFF13  	BYTE	>41,>8A,>FF,>13,>41,>95,>FF,>33
+              4195FF33
+ 1374:  F971  4195FF41  	BYTE	>41,>95,>FF,>41,>A1
+              A1
+ 1375:                  	; Rules for 'E'
+ 1376:  F976  13FF13D3  RULESE	BYTE	>13,>FF,>13,>D3,>09,>10,>FF,>13
+              0910FF13
+ 1377:  F97E  FF0711FF  	BYTE	>FF,>07,>11,>FF,>13,>FF,>11,>FF
+              13FF11FF
+ 1378:  F986  13D309E4  	BYTE	>13,>D3,>09,>E4,>13,>41,>95,>09
+              13419509
+ 1379:  F98E  10FF2413  	BYTE	>10,>FF,>24,>13,>FF,>F6,>25,>32
+              FFF62532
+ 1380:  F996  47A30911  	BYTE	>47,>A3,>09,>11,>EC,>FE,>72,>A9
+              ECFE72A9
+ 1381:  F99E  097C9309  	BYTE	>09,>7C,>93,>09,>10,>F2,>09,>F3
+              10F209F3
+ 1382:  F9A6  FF0E0BD3  	BYTE	>FF,>0E,>0B,>D3,>72,>A9,>47,>07
+              72A94707
+ 1383:  F9AE  0E8CF209  	BYTE	>0E,>8C,>F2,>09,>47,>AF,>F2,>F3
+              47AFF2F3
+ 1384:  F9B6  137625AE  	BYTE	>13,>76,>25,>AE,>13,>53,>23,>0C
+              1353230C
+ 1385:  F9BE  8B137625  	BYTE	>8B,>13,>76,>25,>AE,>53,>23,>07
+              AE532307
+ 1386:  F9C6  078B0910  	BYTE	>07,>8B,>09,>10,>F7,>71,>9F,>0D
+              F7719F0D
+ 1387:  F9CE  F7DFF771  	BYTE	>F7,>DF,>F7,>71,>9F,>FF,>2F,>D3
+              9FFF2FD3
+ 1388:  F9D6  09100CF3  	BYTE	>09,>10,>0C,>F3,>13,>4C,>AB,>09
+              134CAB09
+ 1389:  F9DE  10FF3313  	BYTE	>10,>FF,>33,>13,>FF,>09,>10,>6C
+              FF09106C
+ 1390:  F9E6  B9136D93  	BYTE	>B9,>13,>6D,>93,>09,>10,>6D,>25
+              09106D25
+ 1391:  F9EE  2EB4500C  	BYTE	>2E,>B4,>50,>0C,>0B,>02,>8D,>66
+              0B028D66
+ 1392:  F9F6  35AC681E  	BYTE	>35,>AC,>68,>1E,>AD,>65,>B2,>FC
+              AD65B2FC
+ 1393:  F9FE  E5D36132  	BYTE	>E5,>D3,>61,>32,>AE,>74,>8B,>13
+              AE748B13
+ 1394:  FA06  61B20EF4  	BYTE	>61,>B2,>0E,>F4,>11,>61,>B2,>FC
+              1161B2FC
+ 1395:  FA0E  61A44707  	BYTE	>61,>A4,>47,>07,>01,>95,>09,>10
+              01950910
+ 1396:  FA16  E113538F  	BYTE	>E1,>13,>53,>8F,>E1,>33,>35,>C7
+              E13335C7
+ 1397:  FA1E  E1D36927  	BYTE	>E1,>D3,>69,>27,>A8,>D4,>E9,>D3
+              A8D4E9D3
+ 1398:  FA26  1379A5C6  	BYTE	>13,>79,>A5,>C6,>F9,>D3,>F5,>D6
+              F9D3F5D6
+ 1399:  FA2E  FFC7      	BYTE	>FF,>C7
+ 1400:                  	; Rules for 'F'
+ 1401:  FA30  13FF1347  RULESF	BYTE	>13,>FF,>13,>47,>07,>A8,>F5,>2C
+              07A8F52C
+ 1402:  FA38  689EFF26  	BYTE	>68,>9E,>FF,>26,>FF,>6F,>35,>B2
+              FF6F35B2
+ 1403:  FA40  68BAFFE8  	BYTE	>68,>BA,>FF,>E8
+ 1404:                  	; Rules for 'G'
+ 1405:  FA44  13FF1341  RULESG	BYTE	>13,>FF,>13,>41,>0A,>93,>69,>B6
+              0A9369B6
+ 1406:  FA4C  41240CA3  	BYTE	>41,>24,>0C,>A3,>13,>FF,>29,>0E
+              13FF290E
+ 1407:  FA54  41A4E534  	BYTE	>41,>A4,>E5,>34,>41,>24,>87,>33
+              41248733
+ 1408:  FA5C  356725B3  	BYTE	>35,>67,>25,>B3,>41,>3D,>01,>0A
+              413D010A
+ 1409:  FA64  0707B7E7  	BYTE	>07,>07,>B7,>E7,>41,>A4,>72,>25
+              41A47225
+ 1410:  FA6C  21B44122  	BYTE	>21,>B4,>41,>22,>27,>14,>8D,>FF
+              27148DFF
+ 1411:  FA74  1341A213  	BYTE	>13,>41,>A2,>13,>22,>09,>FF,>41
+              2209FF41
+ 1412:  FA7C  BDFF0F41  	BYTE	>BD,>FF,>0F,>41,>8A,>09,>E8,>E8
+              8A09E8E8
+ 1413:  FA84  E841BDFF  	BYTE	>E8,>41,>BD,>FF,>41,>BD
+              41BD
+ 1414:                  	; Rules for 'H'
+ 1415:  FA8A  13FF1354  RULESH	BYTE	>13,>FF,>13,>54,>02,>B2,>13,>61
+              02B21361
+ 1416:  FA92  B65B1AA3  	BYTE	>B6,>5B,>1A,>A3,>13,>65,>32,>A5
+              136532A5
+ 1417:  FA9A  5BBC136F  	BYTE	>5B,>BC,>13,>6F,>35,>B2,>60,>B3
+              35B260B3
+ 1418:  FAA2  6FB75BA0  	BYTE	>6F,>B7,>5B,>A0,>79,>B0,>5B,>0C
+              79B05B0C
+ 1419:  FAAA  0289FF12  	BYTE	>02,>89,>FF,>12,>F9,>FF,>09,>DB
+              F9FF09DB
+ 1420:  FAB2  FFFF      	BYTE	>FF,>FF
+ 1421:                  	; Rules for 'I'
+ 1422:  FAB4  13EE4C8B  RULESI	BYTE	>13,>EE,>4C,>8B,>2E,>FF,>2E,>25
+              2EFF2E25
+ 1423:  FABC  C6FF13C6  	BYTE	>C6,>FF,>13,>C6,>EE,>24,>46,>8B
+              EE24468B
+ 1424:  FAC4  1310FF0B  	BYTE	>13,>10,>FF,>0B,>C6,>13,>10,>65
+              C6131065
+ 1425:  FACC  A4134601  	BYTE	>A4,>13,>46,>01,>95,>09,>11,>65
+              95091165
+ 1426:  FAD4  A4135301  	BYTE	>A4,>13,>53,>01,>95,>26,>32,>E5
+              952632E5
+ 1427:  FADC  2E24C765  	BYTE	>2E,>24,>C7,>65,>AE,>53,>0C,>8B
+              AE530C8B
+ 1428:  FAE4  E534468C  	BYTE	>E5,>34,>46,>8C,>65,>B2,>53,>B3
+              65B253B3
+ 1429:  FAEC  FF0BD3E5  	BYTE	>FF,>0B,>D3,>E5,>D3,>EE,>0B,>53
+              D3EE0B53
+ 1430:  FAF4  8BF20946  	BYTE	>8B,>F2,>09,>46,>B3,>FF,>0E,>0B
+              B3FF0E0B
+ 1431:  FAFC  C6FF0E0F  	BYTE	>C6,>FF,>0E,>0F,>10,>09,>CC,>FA
+              1009CCFA
+ 1432:  FB04  0B46ABF3  	BYTE	>0B,>46,>AB,>F3,>0B,>46,>AB,>FF
+              0B46ABFF
+ 1433:  FB0C  1F0BC60F  	BYTE	>1F,>0B,>C6,>0F,>0E,>FF,>0E,>0F
+              0EFF0E0F
+ 1434:  FB14  CCFF340B  	BYTE	>CC,>FF,>34,>0B,>C6,>09,>11,>FF
+              C60911FF
+ 1435:  FB1C  0E0FCCF2  	BYTE	>0E,>0F,>CC,>F2,>F4,>11,>FF,>2F
+              F411FF2F
+ 1436:  FB24  2EF167A8  	BYTE	>2E,>F1,>67,>A8,>C6,>6C,>A4,>46
+              C66CA446
+ 1437:  FB2C  3E019567  	BYTE	>3E,>01,>95,>67,>AE,>46,>8B,>67
+              AE468B67
+ 1438:  FB34  AE0E468B  	BYTE	>AE,>0E,>46,>8B,>67,>AE,>0B,>46
+              67AE0B46
+ 1439:  FB3C  8B7135A5  	BYTE	>8B,>71,>35,>A5,>53,>02,>A9,>FF
+              5302A9FF
+ 1440:  FB44  21C62DFF  	BYTE	>21,>C6,>2D,>FF,>23,>C6,>FF,>CC
+              23C6FFCC
+ 1441:                  	; Rules for 'J'
+ 1442:  FB4C  13FF1341  RULESJ	BYTE	>13,>FF,>13,>41,>0A,>94,>FF,>41
+              0A94FF41
+ 1443:  FB54  8A        	BYTE	>8A
+ 1444:                  	; Rules for 'K'
+ 1445:  FB55  13FF1342  RULESK	BYTE	>13,>FF,>13,>42,>2A,>94,>13,>FF
+              2A9413FF
+ 1446:  FB5D  2EFFFF13  	BYTE	>2E,>FF,>FF,>13,>42,>A9,>FF,>42
+              42A9FF42
+ 1447:  FB65  AA        	BYTE	>AA
+ 1448:                  	; Rules for 'L'
+ 1449:  FB66  13FF1347  RULESL	BYTE	>13,>FF,>13,>47,>07,>AD,>EF,>23
+              07ADEF23
+ 1450:  FB6E  096DB5FF  	BYTE	>09,>6D,>B5,>FF,>2C,>FF,>FF,>0B
+              2CFFFF0B
+ 1451:  FB76  FE6521A4  	BYTE	>FE,>65,>21,>A4,>6D,>13,>01,>95
+              6D130195
+ 1452:  FB7E  613527A8  	BYTE	>61,>35,>27,>A8,>6D,>1A,>A8,>FF
+              6D1AA8FF
+ 1453:  FB86  ED        	BYTE	>ED
+ 1454:                  	; Rules for 'M'
+ 1455:  FB87  E2D013FF  RULESM	BYTE	>E2,>D0,>13,>FF,>13,>47,>07,>90
+              13470790
+ 1456:  FB8F  6FB6501F  	BYTE	>6F,>B6,>50,>1F,>A3,>FF,>2D,>FF
+              A3FF2DFF
+ 1457:  FB97  FFD0      	BYTE	>FF,>D0
+ 1458:                  	; Rules for 'N'
+ 1459:  FB99  13FF1347  RULESN	BYTE	>13,>FF,>13,>47,>07,>8B,>25,>E7
+              078B25E7
+ 1460:  FBA1  0F4B018A  	BYTE	>0F,>4B,>01,>8A,>E7,>32,>6C,>01
+              E7326C01
+ 1461:  FBA9  A4E7096C  	BYTE	>A4,>E7,>09,>6C,>01,>A4,>67,>AC
+              01A467AC
+ 1462:  FBB1  0B6C0124  	BYTE	>0B,>6C,>01,>24,>BE,>E7,>EC,>EB
+              BEE7ECEB
+ 1463:  FBB9  136C02A9  	BYTE	>13,>6C,>02,>A9,>EB,>33,>6C,>02
+              EB336C02
+ 1464:  FBC1  A9EB6C02  	BYTE	>A9,>EB,>6C,>02,>AA,>13,>6F,>B7
+              AA136FB7
+ 1465:  FBC9  1378A0FF  	BYTE	>13,>78,>A0,>FF,>2E,>FF,>09,>10
+              2EFF0910
+ 1466:  FBD1  F54B3196  	BYTE	>F5,>4B,>31,>96,>13,>FF,>F8,>47
+              13FFF847
+ 1467:  FBD9  B44B028D  	BYTE	>B4,>4B,>02,>8D,>FF,>CB
+              FFCB
+ 1468:                  	; Rules for 'O'
+ 1469:  FBDF  13FF13F5  RULESO	BYTE	>13,>FF,>13,>F5,>E6,>13,>4F,>A3
+              E6134FA3
+ 1470:  FBE7  722F3527  	BYTE	>72,>2F,>35,>27,>A8,>4F,>0F,>27
+              A84F0F27
+ 1471:  FBEF  B50910F2  	BYTE	>B5,>09,>10,>F2,>13,>F3,>09,>10
+              13F30910
+ 1472:  FBF7  72B31373  	BYTE	>72,>B3,>13,>73,>AB,>F2,>FA,>13
+              ABF2FA13
+ 1473:  FBFF  6EA56E0F  	BYTE	>6E,>A5,>6E,>0F,>8B,>0F,>6E,>A5
+              8B0F6EA5
+ 1474:  FC07  6E0F8B11  	BYTE	>6E,>0F,>8B,>11,>F7,>2E,>E0,>F7
+              F72EE0F7
+ 1475:  FC0F  F5137625  	BYTE	>F5,>13,>76,>25,>B2,>75,>23,>B3
+              B27523B3
+ 1476:  FC17  F64FA3FF  	BYTE	>F6,>4F,>A3,>FF,>0E,>0B,>F5,>FF
+              0E0BF5FF
+ 1477:  FC1F  0E252EF5  	BYTE	>0E,>25,>2E,>F5,>FF,>0E,>29,>09
+              FF0E2909
+ 1478:  FC27  F5EC2475  	BYTE	>F5,>EC,>24,>75,>AD,>75,>27,>28
+              AD752728
+ 1479:  FC2F  B4571702  	BYTE	>B4,>57,>17,>02,>8D,>75,>27,>A8
+              8D7527A8
+ 1480:  FC37  4F0FA80C  	BYTE	>4F,>0F,>A8,>0C,>75,>B2,>FA,>10
+              75B2FA10
+ 1481:  FC3F  75B260B3  	BYTE	>75,>B2,>60,>B3,>13,>F5,>E0,>10
+              13F5E010
+ 1482:  FC47  F53309E0  	BYTE	>F5,>33,>09,>E0,>75,>B3,>4F,>B7
+              75B34FB7
+ 1483:  FC4F  752CA45E  	BYTE	>75,>2C,>A4,>5E,>01,>95,>0E,>F5
+              01950EF5
+ 1484:  FC57  0E2CCF75  	BYTE	>0E,>2C,>CF,>75,>B0,>5F,>02,>89
+              B05F0289
+ 1485:  FC5F  F5E0F9C5  	BYTE	>F5,>E0,>F9,>C5,>69,>2E,>A7,>75
+              692EA775
+ 1486:  FC67  0CACE9C5  	BYTE	>0C,>AC,>E9,>C5,>6F,>B2,>FA,>6F
+              6FB2FA6F
+ 1487:  FC6F  AB135E02  	BYTE	>AB,>13,>5E,>02,>A9,>6F,>AB,>33
+              A96FAB33
+ 1488:  FC77  5E02A96F  	BYTE	>5E,>02,>A9,>6F,>AB,>5E,>02,>AA
+              AB5E02AA
+ 1489:  FC7F  6FA4135E  	BYTE	>6F,>A4,>13,>5E,>01,>95,>EF,>24
+              0195EF24
+ 1490:  FC87  DEEFDFFF  	BYTE	>DE,>EF,>DF,>FF,>25,>F5,>FF,>13
+              25F5FF13
+ 1491:  FC8F  F561B2FA  	BYTE	>F5,>61,>B2,>FA,>E1,>F5,>13,>6E
+              E1F5136E
+ 1492:  FC97  2CB9750B  	BYTE	>2C,>B9,>75,>0B,>2D,>93,>13,>6E
+              2D93136E
+ 1493:  FC9F  23A56E0F  	BYTE	>23,>A5,>6E,>0F,>0B,>B7,>6E,>07
+              0BB76E07
+ 1494:  FCA7  B4750B02  	BYTE	>B4,>75,>0B,>02,>8D,>23,>FF,>2E
+              8D23FF2E
+ 1495:  FCAF  CFFF2E27  	BYTE	>CF,>FF,>2E,>27,>D7,>13,>11,>FF
+              D71311FF
+ 1496:  FCB7  2ECF29EE  	BYTE	>2E,>CF,>29,>EE,>4F,>8B,>09,>10
+              4F8B0910
+ 1497:  FCBF  EE134F8B  	BYTE	>EE,>13,>4F,>8B,>FF,>33,>34,>13
+              FF333413
+ 1498:  FCC7  F5E60E57  	BYTE	>F5,>E6,>0E,>57,>A8,>74,>28,>25
+              A8742825
+ 1499:  FCCF  B24F36B3  	BYTE	>B2,>4F,>36,>B3,>73,>B3,>13,>57
+              73B31357
+ 1500:  FCD7  1737B709  	BYTE	>17,>37,>B7,>09,>11,>ED,>4F,>90
+              11ED4F90
+ 1501:  FCDF  FFD8      	BYTE	>FF,>D8
+ 1502:                  	; Rules for 'P'
+ 1503:  FCE1  733923A8  RULESP	BYTE	>73,>39,>23,>A8,>77,>37,>06,>01
+              77370601
+ 1504:  FCE9  AA13FF13  	BYTE	>AA,>13,>FF,>13,>42,>09,>93,>E8
+              420993E8
+ 1505:  FCF1  E8652FB0  	BYTE	>E8,>65,>2F,>B0,>42,>09,>13,>02
+              42091302
+ 1506:  FCF9  896FB742  	BYTE	>89,>6F,>B7,>42,>09,>A0,>75,>B4
+              09A075B4
+ 1507:  FD01  1342091E  	BYTE	>13,>42,>09,>1E,>02,>8D,>FF,>30
+              028DFF30
+ 1508:  FD09  FFFF4289  	BYTE	>FF,>FF,>42,>89
+ 1509:                  	; Rules for 'Q'
+ 1510:  FD0D  13FF1342  RULESQ	BYTE	>13,>FF,>13,>42,>2A,>31,>9F,>75
+              2A319F75
+ 1511:  FD15  21B24208  	BYTE	>21,>B2,>42,>08,>30,>98,>75,>A5
+              309875A5
+ 1512:  FD1D  13422A31  	BYTE	>13,>42,>2A,>31,>9F,>F5,>42,>08
+              9FF54208
+ 1513:  FD25  B0FF4288  	BYTE	>B0,>FF,>42,>88
+ 1514:                  	; Rules for 'R'
+ 1515:  FD29  13FF13FB  RULESR	BYTE	>13,>FF,>13,>FB,>13,>E5,>0E,>09
+              13E50E09
+ 1516:  FD31  4E93E8CE  	BYTE	>4E,>93,>E8,>CE,>FF,>32,>FF,>11
+              FF32FF11
+ 1517:  FD39  FFE7FFCE  	BYTE	>FF,>E7,>FF,>CE
+ 1518:                  	; Rules for 'S'
+ 1519:  FD3D  13FF1347  RULESS	BYTE	>13,>FF,>13,>47,>07,>37,>B7,>E8
+              0737B7E8
+ 1520:  FD45  E509692F  	BYTE	>E5,>09,>69,>2F,>AE,>66,>0F,>8B
+              AE660F8B
+ 1521:  FD4D  6F2DA577  	BYTE	>6F,>2D,>A5,>77,>0F,>90,>09,>75
+              0F900975
+ 1522:  FD55  B20966B3  	BYTE	>B2,>09,>66,>B3,>75,>B2,>09,>65
+              75B20965
+ 1523:  FD5D  B309F509  	BYTE	>B3,>09,>F5,>09,>66,>96,>09,>73
+              66960973
+ 1524:  FD65  B5096596  	BYTE	>B5,>09,>65,>96,>09,>65,>A4,>13
+              0965A413
+ 1525:  FD6D  6B019509  	BYTE	>6B,>01,>95,>09,>FF,>09,>EB,>61
+              FF09EB61
+ 1526:  FD75  29A47737  	BYTE	>29,>A4,>77,>37,>07,>07,>01,>95
+              07070195
+ 1527:  FD7D  0E692FAE  	BYTE	>0E,>69,>2F,>AE,>65,>0F,>8B,>FF
+              650F8BFF
+ 1528:  FD85  33FF0AFF  	BYTE	>33,>FF,>0A,>FF,>13,>EB,>09,>10
+              13EB0910
+ 1529:  FD8D  0A25FF13  	BYTE	>0A,>25,>FF,>13,>EB,>09,>11,>14
+              EB091114
+ 1530:  FD95  FF13EB09  	BYTE	>FF,>13,>EB,>09,>11,>09,>FF,>13
+              1109FF13
+ 1531:  FD9D  F735FF13  	BYTE	>F7,>35,>FF,>13,>F7,>13,>10,>09
+              F7131009
+ 1532:  FDA5  FF13EB13  	BYTE	>FF,>13,>EB,>13,>63,>A8,>77,>37
+              63A87737
+ 1533:  FDAD  02A9FF23  	BYTE	>02,>A9,>FF,>23,>0F,>FF,>09,>ED
+              0FFF09ED
+ 1534:  FDB5  6B9009FF  	BYTE	>6B,>90,>09,>FF,>2E,>07,>EB,>FF
+              2E07EBFF
+ 1535:  FDBD  13F7FF77  	BYTE	>13,>F7,>FF,>77,>B7
+              B7
+ 1536:                  	; Rules for 'T'
+ 1537:  FDC2  FF073342  RULEST	BYTE	>FF,>07,>33,>42,>91,>63,>A8,>42
+              9163A842
+ 1538:  FDCA  B213FF13  	BYTE	>B2,>13,>FF,>13,>42,>0D,>93,>13
+              420D9313
+ 1539:  FDD2  68A51309  	BYTE	>68,>A5,>13,>09,>52,>93,>13,>68
+              52931368
+ 1540:  FDDA  A513528F  	BYTE	>A5,>13,>52,>8F,>EF,>13,>42,>0D
+              EF13420D
+ 1541:  FDE2  9F6F2421  	BYTE	>9F,>6F,>24,>21,>B9,>42,>0D,>1F
+              B9420D1F
+ 1542:  FDEA  219468A1  	BYTE	>21,>94,>68,>A1,>0E,>13,>52,>9A
+              0E13529A
+ 1543:  FDF2  136829B3  	BYTE	>13,>68,>29,>B3,>13,>52,>0C,>37
+              13520C37
+ 1544:  FDFA  B7136825  	BYTE	>B7,>13,>68,>25,>B9,>52,>94,>13
+              B9529413
+ 1545:  FE02  682532A5  	BYTE	>68,>25,>32,>A5,>52,>AF,>13,>68
+              52AF1368
+ 1546:  FE0A  25B25DB3  	BYTE	>25,>B2,>5D,>B3,>68,>25,>B2,>76
+              6825B276
+ 1547:  FE12  B3682529  	BYTE	>B3,>68,>25,>29,>B2,>52,>AF,>13
+              B252AF13
+ 1548:  FE1A  6825AD10  	BYTE	>68,>25,>AD,>10,>52,>07,>90,>68
+              52079068
+ 1549:  FE22  2533A513  	BYTE	>25,>33,>A5,>13,>52,>13,>AB,>13
+              5213AB13
+ 1550:  FE2A  6825AE52  	BYTE	>68,>25,>AE,>52,>07,>8B,>68,>32
+              078B6832
+ 1551:  FE32  2F3527A8  	BYTE	>2F,>35,>27,>A8,>13,>5D,>27,>9F
+              135D279F
+ 1552:  FE3A  682F33A5  	BYTE	>68,>2F,>33,>A5,>52,>35,>B7,>68
+              5235B768
+ 1553:  FE42  2F3527A8  	BYTE	>2F,>35,>27,>A8,>13,>52,>B5,>13
+              1352B513
+ 1554:  FE4A  6835B352  	BYTE	>68,>35,>B3,>52,>0F,>37,>B7,>68
+              0F37B768
+ 1555:  FE52  A513D2E8  	BYTE	>A5,>13,>D2,>E8,>DD,>09,>10,>65
+              DD091065
+ 1556:  FE5A  A413420D  	BYTE	>A4,>13,>42,>0D,>0C,>01,>95,>33
+              0C019533
+ 1557:  FE62  E9092E42  	BYTE	>E9,>09,>2E,>42,>B2,>E9,>2F,>E5
+              B2E92FE5
+ 1558:  FE6A  E921E569  	BYTE	>E9,>21,>E5,>69,>25,>AE,>65,>0F
+              25AE650F
+ 1559:  FE72  8B75B209  	BYTE	>8B,>75,>B2,>09,>42,>32,>B3,>F5
+              4232B3F5
+ 1560:  FE7A  21423296  	BYTE	>21,>42,>32,>96,>13,>77,>AF,>42
+              1377AF42
+ 1561:  FE82  0D9FFF34  	BYTE	>0D,>9F,>FF,>34,>FF,>FF,>33,>42
+              FFFF3342
+ 1562:  FE8A  91FF428D  	BYTE	>91,>FF,>42,>8D
+ 1563:                  	; Rules for 'U'
+ 1564:  FE8E  13FF1371  RULESU	BYTE	>13,>FF,>13,>71,>9F,>EE,>29,>59
+              9FEE2959
+ 1565:  FE96  168B13EE  	BYTE	>16,>8B,>13,>EE,>4F,>8B,>13,>70
+              4F8B1370
+ 1566:  FE9E  2FAE4F02  	BYTE	>2F,>AE,>4F,>02,>09,>18,>8B,>0D
+              09188B0D
+ 1567:  FEA6  F20956B3  	BYTE	>F2,>09,>56,>B3,>F2,>09,>71,>16
+              F2097116
+ 1568:  FEAE  B3F211F3  	BYTE	>B3,>F2,>11,>F3,>FF,>0E,>13,>CF
+              FF0E13CF
+ 1569:  FEB6  FF0E0ECF  	BYTE	>FF,>0E,>0E,>CF,>F9,>C6,>13,>27
+              F9C61327
+ 1570:  FEBE  FF09FF27  	BYTE	>FF,>09,>FF,>27,>FF,>0B,>FF,>27
+              FF0BFF27
+ 1571:  FEC6  FF09EE0D  	BYTE	>FF,>09,>EE,>0D,>FF,>DF,>FF,>71
+              FFDFFF71
+ 1572:  FECE  96        	BYTE	>96
+ 1573:                  	; Rules for 'V'
+ 1574:  FECF  13FF1363  RULESV	BYTE	>13,>FF,>13,>63,>93,>69,>25,>B7
+              936925B7
+ 1575:  FED7  63319FFF  	BYTE	>63,>31,>9F,>FF,>E3
+              E3
+ 1576:                  	; Rules for 'W'
+ 1577:  FEDC  13FF1341  RULESW	BYTE	>13,>FF,>13,>41,>21,>0F,>01,>3F
+              210F013F
+ 1578:  FEE4  3E319613  	BYTE	>3E,>31,>96,>13,>65,>32,>A5,>6E
+              6532A56E
+ 1579:  FEEC  B41361B3  	BYTE	>B4,>13,>61,>B3,>13,>6E,>0F,>AB
+              136E0FAB
+ 1580:  FEF4  E1336E98  	BYTE	>E1,>33,>6E,>98,>E1,>34,>6E,>17
+              E1346E17
+ 1581:  FEFC  9761AE6E  	BYTE	>97,>61,>AE,>6E,>18,>8B,>68,>25
+              188B6825
+ 1582:  FF04  32A570AF  	BYTE	>32,>A5,>70,>AF,>68,>21,>B4,>70
+              6821B470
+ 1583:  FF0C  18028D68  	BYTE	>18,>02,>8D,>68,>2F,>AC,>79,>35
+              2FAC7935
+ 1584:  FF14  AD68AF79  	BYTE	>AD,>68,>AF,>79,>9F,>EF,>2D,>6E
+              9FEF2D6E
+ 1585:  FF1C  8FE8F061  	BYTE	>8F,>E8,>F0,>61,>B2,>6E,>BA,>6F
+              B26EBA6F
+ 1586:  FF24  B20E6EB3  	BYTE	>B2,>0E,>6E,>B3,>F2,>CE,>FF,>EE
+              F2CEFFEE
+ 1587:                  	; Rules for 'X'
+ 1588:  FF2C  13FF1347  RULESX	BYTE	>13,>FF,>13,>47,>02,>29,>B7,>13
+              0229B713
+ 1589:  FF34  FFEBFF42  	BYTE	>FF,>EB,>FF,>42,>29,>B7
+              29B7
+ 1590:                  	; Rules for 'Y'
+ 1591:  FF3A  6F35B259  RULESY	BYTE	>6F,>35,>B2,>59,>BA,>13,>FF,>13
+              BA13FF13
+ 1592:  FF42  6E866F35  	BYTE	>6E,>86,>6F,>35,>2E,>A7,>59,>0F
+              2EA7590F
+ 1593:  FF4A  AC136FB5  	BYTE	>AC,>13,>6F,>B5,>59,>9F,>65,>21
+              599F6521
+ 1594:  FF52  B21059BC  	BYTE	>B2,>10,>59,>BC,>13,>65,>B3,>59
+              1365B359
+ 1595:  FF5A  0737B713  	BYTE	>07,>37,>B7,>13,>FF,>D9,>09,>11
+              FFD90911
+ 1596:  FF62  FF13D309  	BYTE	>FF,>13,>D3,>09,>11,>FF,>29,>D3
+              11FF29D3
+ 1597:  FF6A  1310FF13  	BYTE	>13,>10,>FF,>13,>C6,>13,>10,>FF
+              C61310FF
+ 1598:  FF72  09C61310  	BYTE	>09,>C6,>13,>10,>FF,>0E,>0F,>10
+              FF0E0F10
+ 1599:  FF7A  09CC1310  	BYTE	>09,>CC,>13,>10,>FF,>0E,>09,>C6
+              FF0E09C6
+ 1600:  FF82  FFCC      	BYTE	>FF,>CC
+ 1601:                  	; Rules for 'Z'
+ 1602:  FF84  13FF136B  RULESZ	BYTE	>13,>FF,>13,>6B,>93,>FF,>3A,>FF
+              93FF3AFF
+ 1603:  FF8C  FFEB      	BYTE	>FF,>EB
+ 1604:                  	; Rules for digits
+ 1605:  FF8E  D06B3CB5  RULNUM	BYTE	>D0,>6B,>3C,>B5,>D1,>6E,>0F,>0F
+              D16E0F0F
+ 1606:  FF96  8BD2420D  	BYTE	>8B,>D2,>42,>0D,>9F,>D3,>5D,>0E
+              9FD35D0E
+ 1607:  FF9E  93D468BA  	BYTE	>93,>D4,>68,>BA,>D5,>68,>06,>A3
+              D56806A3
+ 1608:  FFA6  D677370C  	BYTE	>D6,>77,>37,>0C,>02,>29,>B7,>D7
+              0229B7D7
+ 1609:  FFAE  77370723  	BYTE	>77,>37,>07,>23,>0C,>8B,>D8,>54
+              0C8BD854
+ 1610:  FFB6  028DD978  	BYTE	>02,>8D,>D9,>78,>06,>8B
+              068B
+ 1611:                  
+ 1612:                  ;==============================================================================
+ 1613:                  
+ 1614:                  	; Index of rules tables
+ 1615:  FFBC  F78C      TABRUL	DATA	RLPNCT
+ 1616:  FFBD            TABRU1	EQU	$-1
+ 1617:  FFBE  F7CCF882  	DATA	RULESA,RULESB,RULESC,RULESD
+              F8CCF919
+ 1618:  FFC6  F976FA30  	DATA	RULESE,RULESF,RULESG,RULESH
+              FA44FA8A
+ 1619:  FFCE  FAB4FB4C  	DATA	RULESI,RULESJ,RULESK,RULESL
+              FB55FB66
+ 1620:  FFD6  FB87FB99  	DATA	RULESM,RULESN,RULESO,RULESP
+              FBDFFCE1
+ 1621:  FFDE  FD0DFD29  	DATA	RULESQ,RULESR,RULESS,RULEST
+              FD3DFDC2
+ 1622:  FFE6  FE8EFECF  	DATA	RULESU,RULESV,RULESW,RULESX
+              FEDCFF2C
+ 1623:  FFEE  FF3AFF84  	DATA	RULESY,RULESZ,RULNUM,>FFFF
+              FF8EFFFF
+ 1624:                  
+ 1625:                  ;==============================================================================
+ 1626:                  	; Interrupt vectors
+ 1627:  FFF6  F1BCF1C1  	DATA	INT4,INT3,>FFFF,INT1
+              FFFFF385
+ 1628:  FFFE  F000      	DATA	CTS256
+ 1629:                  
+ 1630:                  ;==============================================================================
+ 1631:  0200            PARINP	EQU	>0200			; Memory-mapped parallel input from Host
+ 1632:  2000            SP0256	EQU	>2000			; Memory-mapped parallel output to SP0256A-AL2
+ 1633:  3000            CTSXRAM	EQU	>3000			; CTS-256A External RAM origin
+ 1634:                  ;==============================================================================
+ 1635:                  
+ 1636:                  ; addresses within the text-to-speech code in the masked ROM...
+ 1637:  F1AC            AUDIBLE	EQU	SAYOK			; say "OK" (AUDIBLE)
+ 1638:  F3E7            GISPEECH EQU	ENCODE			; encode text as allophones ()
+ 1639:  F1E2            SAVE	EQU	STINPB			; store character in input buffer
+ 1640:  F1F0            ESCAPE	EQU	CLBUF			; clear buffers and reinitialize
+ 1641:                  
+ 1642:  0000            	END	CTS256
+
+    0 TOTAL ERROR(S)
+    0 TOTAL WARNING(S)

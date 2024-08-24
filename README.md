@@ -9,6 +9,7 @@ Input of the CTS256A-AL2 is standard English ASCII characters, which makes conne
 
 ### Files:
 - `CTS256A.ASM` Disassembled and commented source of the ROM contained in the PIC7040 Microcontroller (based on TI TMS7042 MCU);
+- `CTS256A.LST` Listing of the assembly of `CTS256A.ASM`;
 - `CTS256A.PRN` Raw disassembly listing of the ROM contained in the PIC7040 Microcontroller (based on TI TMS7042 MCU);
 - `CTS256A.BIN` Binary image of the ROM (address range $F000-$FFF);
 - `RULES.TXT`   Extracted rules used to convert the text to SP0256 allophones;

@@ -9,50 +9,153 @@
 
 ;==============================================================================
 
+; registers used by the text-to-speech code in the masked ROM...
+REGA	EQU	R0			; A register
+XREGA	EQU	>0000			; A register long address
+REGB	EQU	R1			; B register
+XREGB	EQU	>0001			; B register long address
+INRDH	EQU	R2			; input buffer read pointer MSB
+INRDL	EQU	R3			; input buffer read pointer LSB
+INRD	EQU	R3			; input buffer read pointer
+INWRH	EQU	R4			; input buffer write pointer MSB
+INWRL	EQU	R5			; input buffer write pointer LSB
+INWR	EQU	R5			; input buffer write pointer
+OUTRDH	EQU	R6			; output buffer read pointer MSB
+OUTRDL	EQU	R7			; output buffer read pointer LSB
+OUTRD	EQU	R7			; output buffer read pointer
+OUTWRH	EQU	R8			; output buffer write pointer MSB
+OUTWRL	EQU	R9			; output buffer write pointer LSB
+OUTWR	EQU	R9			; output buffer write pointer
+FLAGS1	EQU	R10			; flags 1
+FLAGS2	EQU	R11			; flags 2
+BUFPTRH	EQU	R12			; buffer pointer MSB
+BUFPTRL	EQU	R13			; buffer pointer MSB
+BUFPTR	EQU	R13			; buffer pointer pair
+XBUFPTR	EQU	>000D			; temp register pair long address
+INRDPH	EQU	R14			; next input buffer read pointer MSB
+INRDPL	EQU	R15			; next input buffer read pointer LSB
+INRDP	EQU	R15			; next input buffer read pointer
+INRDBH	EQU	R16			; backward input buffer read pointer MSB
+INRDBL	EQU	R17			; backward input buffer read pointer LSB
+INRDB	EQU	R17			; backward input buffer read pointer
+PEPROMH	EQU	R18			; EPROM scan pointer MSB
+PEPROML	EQU	R19			; EPROM scan pointer LSB
+PEPROM	EQU	R19			; EPROM scan pointer
+INRDLH	EQU	R18			; last input buffer read pointer MSB
+INRDLL	EQU	R19			; last input buffer read pointer LSB
+INRDLX	EQU	R19			; last input buffer read pointer
+RULPTRH	EQU	R20			; Rules pointer MSB
+RULPTRL	EQU	R21			; Rules pointer MSB
+RULPTR	EQU	R21			; Rules pointer
+NXTCHR	EQU	R22			; Next character (-$20 & $3F)
+COUNTER	EQU	R23			; Counter (RAM pages or chars)
+LSTDLMH	EQU	R24			; last delimiter position MSB
+LSTDLML	EQU	R25			; last delimiter position LSB
+LSTDELM	EQU	R25			; last delimiter position
+ISP0256	EQU	R27			; SP0256 write address
+INRDLBH	EQU	R28			; last backward input buffer read pointer MSB
+INRDLBL	EQU	R29			; last backward input buffer read pointer LSB
+INRDLB	EQU	R29			; last backward input buffer read pointer
+INLWMH	EQU	R30			; input buffer low water mark MSB
+INLWML	EQU	R31			; input buffer low water mark LSB
+INLWMX	EQU	R31			; input buffer low water mark
+INHWMH	EQU	R32			; input buffer low water mark MSB
+INHWML	EQU	R33			; input buffer low water mark LSB
+INHWMX	EQU	R33			; input buffer low water mark
+INSTA1H	EQU	R34			; input buffer start - 1 MSB
+INSTA1L	EQU	R35			; input buffer start - 1 LSB
+INSTA1	EQU	R35			; input buffer start - 1
+INENDH	EQU	R36			; input buffer end MSB
+INENDL	EQU	R37			; input buffer end LSB
+INEND	EQU	R37			; input buffer end
+OUTEN1H	EQU	R38			; output buffer end + 1 MSB
+OUTEN1L	EQU	R39			; output buffer end + 1 LSB
+OUTEND1	EQU	R39			; output buffer end + 1
+INSTAH	EQU	R40			; input buffer start MSB
+INSTAL	EQU	R41			; input buffer start LSB
+INSTA	EQU	R41			; input buffer start
+OUTSTAH	EQU	R42			; output buffer start MSB
+OUTSTAL	EQU	R43			; output buffer start LSB
+OUTSTA	EQU	R43			; output buffer start
+PSP0256	EQU	R45			; SP0256 base pointer
+PPARINP	EQU	R47			; Parallel input base pointer
+JEPROMH	EQU	R48			; EPROM jump vector MSB
+JEPROM	EQU	R49			; EPROM jump vector
+OUTHWM	EQU	R50			; output buffer high water mark
+INFREEH	EQU	R51			; number of free bytes in input buffer MSB
+INFREEL	EQU	R52			; number of free bytes in input buffer LSB
+INFREE	EQU	R52			; number of free bytes in input buffer
+OUTFREH	EQU	R53			; number of free bytes in output buffer MSB
+OUTFREL	EQU	R54			; number of free bytes in output buffer LSB
+OUTFREE	EQU	R54			; number of free bytes in output buffer
+MATCHED	EQU	R55			; matched chars counter
+INLENH	EQU	R56			; number of bytes in input buffer MSB
+INLENL	EQU	R57			; number of bytes in input buffer LSB
+INLEN	EQU	R57			; number of bytes in input buffer
+
+; I/O ports...
+IOCNT0	EQU	P0			; I/O Control register 0
+APORT	EQU	P4			; Port A
+BPORT	EQU	P6			; Port B
+IOCNT1	EQU	P16			; I/O Control register 1
+SSTAT	EQU	P17			; read - Serial port Status
+SMODE	EQU	P17			; 1st write - Serial port Mode
+SCTL0	EQU	P17			; 2nd and subsequent writes - Serial port Control register 0
+T3DATA	EQU	P20			; Timer 3 Data
+SCTL1	EQU	P21			; Serial Control register 1
+RXBUF	EQU	P22			; Serial Receive Buffer
+TXBUF	EQU	P23			; Serial Transmit Buffer
+
+
+
+
+
+;==============================================================================
+
 	AORG	>F000
 
 ;==============================================================================
 
 	; Main entry point
 CTS256	MOV	%>3A,B
-	LDSP			; Init stack pointer 3B-XX
-	MOVD	%SP0256,R45	; R45 := $2000 - Memory-mapped parallel output to SP0256A-AL2
-	MOVP	%>AA,P0		; P0 = IOCNT0 := 1010 1010
-				; 	Full Expansion;
-				;	Clear INT1, INT2 and INT3 flags
-	MOVP	%>0A,P16	; P16 = IOCNT1 := 0000 1010
-				;	Clear INT4 and INT5 flags
-	MOVP	P4,B		; Read P4 = APORT
-	AND	%>07,B		; Get Serial mode
-	CMP	%>00,B		; Is it Parallel mode ?
-				; useful ?
+	LDSP				; Init stack pointer 3B-XX
+	MOVD	%SP0256,PSP0256		; PSP0256 := $2000 - Memory-mapped parallel output to SP0256A-AL2
+	MOVP	%>AA,IOCNT0		; IOCNT0 = IOCNT0 := 1010 1010
+					; 	Full Expansion;
+					;	Clear INT1, INT2 and INT3 flags
+	MOVP	%>0A,IOCNT1		; IOCNT1 = IOCNT1 := 0000 1010
+					;	Clear INT4 and INT5 flags
+	MOVP	APORT,B			; Read APORT = APORT
+	AND	%>07,B			; Get Serial mode
+	CMP	%>00,B			; Is it Parallel mode?
+					; useful?
 	; Jump if yes
-	JZ	PARALL		; Start in parallel mode
-	AND	%>7F,R10	; Clear R10.7, indicating serial mode
-	MOVP	P4,A		; Read P4 = APORT
-	AND	%>08,A		; Get Selectable Serial Config flag
-	CMP	%>00,A		; Is it set ?
-				; useful ?
+	JZ	PARALL			; Start in parallel mode
+	AND	%>7F,FLAGS1		; Clear FLAGS1.7, indicating serial mode
+	MOVP	APORT,A			; Read APORT = APORT
+	AND	%>08,A			; Get Selectable Serial Config flag
+	CMP	%>00,A			; Is it set?
+					; useful?
 	; Jump if not
-	JZ	SER7N2		; Serial fixed 7N2 config
-	LDA	@>1000		; Read serial config from $1000
-	MOVP	A,P17		; Init P17 = SMODE with seria config
-	JMP	SERSEL		; Serial selectable config
+	JZ	SER7N2			; Serial fixed 7N2 config
+	LDA	@>1000			; Read serial config from $1000
+	MOVP	A,SMODE			; Init P17 = SMODE with serial config
+	JMP	SERSEL			; Serial selectable config
 
-SER7N2	MOVP	%>CB,P17	; P17 = SMODE := Fixed Serial 7N2 config
-SERSEL	MOVP	%>15,P17	; P17 = SCTL0 := OOO1 O1O1
-				; Reset error flags; enable RX & TX
+SER7N2	MOVP	%>CB,SMODE		; P17 = SMODE := Fixed Serial 7N2 config
+SERSEL	MOVP	%>15,SCTL0		; P17 = SCTL0 := OOO1 O1O1
+					; Reset error flags; enable RX & TX
 	; A := value for SCTL1 (prescaler)
-	LDA	@SCT1TB(B)	; Table of values for SCTL1
+	LDA	@SCT1TB(B)		; Table of values for SCTL1
 	PUSH	A
 	; A := value for T3DATA (timer3 reload)
-	LDA	@T3DATB(B)	; Table of timer3 reload values T3DATA
+	LDA	@T3DATB(B)		; Table of timer3 reload values T3DATA
 	POP	B
-	MOVP	B,P21		; set SCTL1
-	MOVP	A,P20		; set T3DATA
-	ORP	%>01,P16	; enable T4
+	MOVP	B,SCTL1			; set SCTL1
+	MOVP	A,T3DATA		; set T3DATA
+	ORP	%>01,IOCNT1		; enable T4
 	; proceed with RAM setup
-	JMP	INIRAM		; Init RAM config
+	JMP	INIRAM			; Init RAM config
 
 	; Table of values for SCTL1
 SCT1TB	BYTE	>FF,>40,>43,>40,>43,>40,>40,>40
@@ -61,187 +164,187 @@ SCT1TB	BYTE	>FF,>40,>43,>40,>43,>40,>40,>40
 T3DATB	BYTE	>FF,>20,>57,>07,>C2,>0F,>81,>03
 
 	; Start in parallel mode
-PARALL	OR	%>80,R10	; Set R10.7, indicating parallel mode
-	MOVD	%PARLINP,R47	; R47 := $0200 parallel input mapped address
-	ORP	%>30,P0		; P0 = IOCNT0, set .4=enable INT3, .5=clear INT3
+PARALL	OR	%>80,FLAGS1		; Set FLAGS1.7, indicating parallel mode
+	MOVD	%PARINP,PPARINP		; PPARINP := $0200 parallel input mapped address
+	ORP	%>30,IOCNT0		; IOCNT0 = IOCNT0, set .4=enable INT3, .5=clear INT3
 	; Init RAM config
-INIRAM	MOVP	P4,B		; B := P4 = APORT
-	AND	%>10,B		; test APORT.4 = RAM buffer - 0=internal - 1=external
-	CMP	%>00,B		; useful ?
+INIRAM	MOVP	APORT,B			; B := APORT = APORT
+	AND	%>10,B			; test APORT.4 = RAM buffer - 0=internal - 1=external
+	CMP	%>00,B			; useful?
 	; jump if internal
-	JZ	INTRAM		; init internal RAM pointers
+	JZ	INTRAM			; init internal RAM pointers
 
-	MOVD	%CTSXRAM,R3	; R2:3 := base RAM address = $3000
-	MOVD	R3,R41		; R40:41 := R2:3
-	PUSH	R2
-	DEC	R2
-	MOV	R2,R34		; R34:35 := R2:3 - 1 ($2FFF)
-	MOV	%>FF,R35
-	ADD	%>02,R2		; R2 += 2 ($31)
-	CLR	R23		; R23 := 0 (page counter)
+	MOVD	%CTSXRAM,INRD		; INRD := base RAM address = $3000
+	MOVD	INRD,INSTA		; INSTA := INRD
+	PUSH	INRDH
+	DEC	INRDH
+	MOV	INRDH,INSTA1H		; INSTA1 := INRD - 1 ($2FFF)
+	MOV	%>FF,INSTA1L
+	ADD	%>02,INRDH		; INRDH += 2 ($31)
+	CLR	COUNTER			; COUNTER := 0 (page counter)
 	; Init external RAM sizing loop
 
-IRAML0	INC	R2		; ++R2
-	CMP	%>F0,R2		; R2 == $F0 ($F000 reached) ?
+IRAML0	INC	INRDH			; ++INRDH
+	CMP	%>F0,INRDH		; INRDH == $F0 ($F000 reached)?
 	; Exit loop if yes
 	JZ	IRAMX0
-	INC	R23		; ++R23
-	CMP	%>10,R23	; R23 == $10 (16 pages) ?
+	INC	COUNTER			; ++COUNTER
+	CMP	%>10,COUNTER		; COUNTER == $10 (16 pages)?
 	; exit loop if yes
 	JZ	IRAMX0
-	MOV	%>5A,A		; A := $5A (RAM test pattern)
-	STA	*R3		; *R2:3 := A
-	CLR	A		; A := 0 (useful?)
-	LDA	*R3		; A := *R2:3
-	CMP	%>5A,A		; A == $5A (test pattern) ?
+	MOV	%>5A,A			; A := $5A (RAM test pattern)
+	STA	*INRD			; *INRD := A
+	CLR	A			; A := 0 (useful?)
+	LDA	*INRD			; A := *INRD
+	CMP	%>5A,A			; A == $5A (test pattern)?
 	; exit loop if not
 	JNZ	IRAMX0
-	SWAP	A		; A := $A5 (reverse bits)
-	STA	*R3		; *R2:3 := A
-	CLR	A		; A := 0 (useful?)
-	LDA	*R3		; A := *R2:3
-	CMP	%>A5,A		; A == $A5 (test pattern) ?
+	SWAP	A			; A := $A5 (reverse bits)
+	STA	*INRD			; *INRD := A
+	CLR	A			; A := 0 (useful?)
+	LDA	*INRD			; A := *INRD
+	CMP	%>A5,A			; A == $A5 (test pattern)?
 	; exit loop if not
 	JNZ	IRAMX0
 	; Test next RAM page
 	JMP	IRAML0
 
-IRAMX0	MOV	R2,R38		; R38:39 := R2:$00 (end RAM addr + 1)
-	CLR	R39		; ATTENTION: page boundary !!
-	SUB	%>01,R2		; --R2 (why not DEC R2?)
-	MOVD	R3,R7		; R6:7 := R2:3 = last RAM page addr (output buffer read ptr)
-	MOVD	R7,R43		; R42:43 := R6:R7 (output buffer start)
-	SUB	%>01,R2		; --R2 (why not DEC R2?)
-	MOV	R2,R36		; R36:37 := R2:$FF (input buffer end)
-	MOV	%>FF,R37
-	POP	R2		; R2 := $30
-	MOV	%>DF,R50	; R50 := $DF
-	JMP	INIROM		; Init EPROM
+IRAMX0	MOV	INRDH,OUTEN1H		; OUTEND1 := INRDH:$00 (end RAM addr + 1)
+	CLR	OUTEN1L			; ATTENTION: page boundary !!
+	SUB	%>01,INRDH		; --INRDH (why not DEC INRDH?)
+	MOVD	INRD,OUTRD		; OUTRD   := INRD = last RAM page addr (output buffer read ptr)
+	MOVD	OUTRD,OUTSTA		; OUTSTA  := OUTRD (output buffer start)
+	SUB	%>01,INRDH		; --INRDH (why not DEC INRDH?)
+	MOV	INRDH,INENDH		; INEND   := INRDH:$FF (input buffer end)
+	MOV	%>FF,INENDL
+	POP	INRDH			; INRDH   := $30
+	MOV	%>DF,OUTHWM		; OUTHWM  := $DF
+	JMP	INIROM			; Init EPROM
 
 	; init internal RAM pointers
-INTRAM	MOVD	%>0051,R41	; R40:41 := $0051 (input buffer start)
-	MOVD	%>0065,R37	; R36:37 := $0065 (input buffer end)
-	MOVD	%>0050,R35	; R34:35 := $0050 (input buffer start - 1)
-	MOVD	%>0066,R43	; R42:43 := $0066 (output buffer start)
-	MOVD	%>0080,R39	; R38:39 := $0080 (end RAM addr + 1)
-	MOVD	R41,R3		; R2:R3 := $0051 (input buffer read ptr)
-	MOVD	R43,R7		; R6:R7 := $0066 (output buffer read ptr)
-	MOV	%>01,R50	; R50 := $01
+INTRAM	MOVD	%>0051,INSTA		; INSTA   := $0051 (input buffer start)
+	MOVD	%>0065,INEND		; INEND   := $0065 (input buffer end)
+	MOVD	%>0050,INSTA1		; INSTA1  := $0050 (input buffer start - 1)
+	MOVD	%>0066,OUTSTA		; OUTSTA  := $0066 (output buffer start)
+	MOVD	%>0080,OUTEND1		; OUTEND1 := $0080 (end RAM addr + 1)
+	MOVD	INSTA,INRD		; INRD    := $0051 (input buffer read ptr)
+	MOVD	OUTSTA,OUTRD		; OUTRD   := $0066 (output buffer read ptr)
+	MOV	%>01,OUTHWM		; OUTHWM  := $01   (output high water mark)
 
 	; Init EPROM
-INIROM	MOVD	%>0000,R19	; R18:19 := 0
-LF0DA	CLR	B		; B := 0 (5 signature bytes counter/index)
-	ADD	%>10,R18	; ++R18 (next page, starting at $1000)
-	CMP	%>F0,R18	; $F0 reached ? (ending at $F000)
+INIROM	MOVD	%>0000,PEPROM		; PEPROM := 0
+LF0DA	CLR	B			; B := 0 (5 signature bytes counter/index)
+	ADD	%>10,PEPROMH		; ++PEPROMH (next page, starting at $1000)
+	CMP	%>F0,PEPROMH		; $F0 reached? (ending at $F000)
 	; Jump if yes
-	JZ	INITOK		; Done peripherals init
-LF0E3	LDA	*R19		; Read signature byte
+	JZ	INITOK			; Done peripherals init
+LF0E3	LDA	*PEPROM			; Read signature byte
 	; and compare it to the 5 first letters flags $80,$48,$28,$58,$85
-	CMPA	@LTFLGS(B)	; Letter flags
+	CMPA	@LTFLGS(B)		; Letter flags
 	; next page if mismatch
 	JNZ	LF0DA
-	INC	B		; next test byte
-	CMP	%>05,B		; done 5 bytes
+	INC	B			; next test byte
+	CMP	%>05,B			; done 5 bytes
 	; Exit if yes => EPROM found
-	JZ	STAROM		; Boot in EPROM
-	INC	R19		; next EPROM byte
-	JMP	LF0E3		; loop
+	JZ	STAROM			; Boot in EPROM
+	INC	PEPROML			; next EPROM byte
+	JMP	LF0E3			; loop
 
 	; Boot in EPROM
-STAROM	INC	R19		; point to 1st byte following sig bytes
-	MOVD	R19,R49		; R48:49 := R18:19 = EPROM entry point
-	BR	*R49		; Boot in EPROM
+STAROM	INC	PEPROML			; point to 1st byte following sig bytes
+	MOVD	PEPROM,JEPROM		; JEPROM := PEPROM = EPROM entry point
+	BR	*JEPROM			; Boot in EPROM
 
 	; Done peripherals init
-INITOK	MOV	%>00,R48	; R48 := 0 (EPROM not present)
-	CALL	@INIPTR		; Init buffer pointers and regs
-	CALL	@SAYOK		; Say O.K.
+INITOK	MOV	%>00,JEPROMH		; JEPROMH := 0 (EPROM not present)
+	CALL	@INIPTR			; Init buffer pointers and regs
+	CALL	@SAYOK			; Say O.K.
 	JMP	LF110
 
 ;==============================================================================
 
 	; Polling loop
-POLL	BTJO	%>01,R11,LF110	; test R11.0 = any delimiter; jump if yes
-	AND	%>EF,R11	; reset R11.4 (found delimiter?)
+POLL	BTJO	%>01,FLAGS2,LF110	; test FLAGS2.0 = any delimiter; jump if yes
+	AND	%>EF,FLAGS2		; reset FLAGS2.4 (found delimiter?)
 
 	; Idle loop (wait interrupt?)
-WTIDLE	BTJZ	%>10,R11,WTIDLE	; Idle loop (wait R11.4)
-LF110	CMP	R3,R5		; Input buffer read ptr LSB != write ptr LSB ?
-	JNZ	ENDPOL		; Exit polling loop if yes
-	CMP	R2,R4		; Idem for MSB ?
-	JNZ	ENDPOL		; Exit polling loop if yes
-	JMP	POLL		; Polling loop
+WTIDLE	BTJZ	%>10,FLAGS2,WTIDLE	; Idle loop (wait FLAGS2.4)
+LF110	CMP	INRDL,INWRL		; Input buffer read ptr LSB != write ptr LSB?
+	JNZ	ENDPOL			; Exit polling loop if yes
+	CMP	INRDH,INWRH		; Idem for MSB?
+	JNZ	ENDPOL			; Exit polling loop if yes
+	JMP	POLL			; Polling loop
 
 	; Exit polling loop
-ENDPOL	CMP	%>00,R56	; Chars in buffer MSB
-	JNZ	LF126		; exit ENDPOL loop if != 0
-	CMP	%>00,R57	; Chars in buffer LSB
-	JZ	ENDPOL		; loop if == 0
+ENDPOL	CMP	%>00,INLENH		; Chars in buffer MSB
+	JNZ	LF126			; exit ENDPOL loop if != 0
+	CMP	%>00,INLENL		; Chars in buffer LSB
+	JZ	ENDPOL			; loop if == 0
 
 	; Exit ENDPOL loop
-LF126	BTJZ	%>08,R11,LF133	; R11.3 == 1 (output buffer full or too high)? Jump if not
-	CMP	%>01,R50	; Internal RAM ?
+LF126	BTJZ	%>08,FLAGS2,LF133	; FLAGS2.3 == 1 (output buffer full or too high)? Jump if not
+	CMP	%>01,OUTHWM		; Internal RAM?
 	; jump if yes
-	JZ	CLBUF1		; Clear buffers if yes
+	JZ	CLBUF1			; Clear buffers if yes
 
-	; wait reset of bit 3 of R11
-W11B3	BTJO	%>08,R11,W11B3	; wait reset of bit 3 of R11 (output buffer low enough)
-LF133	CALL	@ENCODE		; Encode text to allophones
-	CMP	R7,R9		; Output buffer empty ?
-	JZ	LF110		; jump to input buffer polling loop if yes
-	ORP	%>01,P0		; enable INT1* (SP0256) to send output
-	JMP	LF110		; jump to input buffer polling loop
+	; wait reset of bit 3 of FLAGS2
+W11B3	BTJO	%>08,FLAGS2,W11B3	; wait reset of bit 3 of FLAGS2 (output buffer low enough)
+LF133	CALL	@ENCODE			; Encode text to allophones
+	CMP	OUTRDL,OUTWRL		; Output buffer empty?
+	JZ	LF110			; jump to input buffer polling loop if yes
+	ORP	%>01,IOCNT0		; enable INT1* (SP0256) to send output
+	JMP	LF110			; jump to input buffer polling loop
 
 	; Clear buffers
-CLBUF1	BR	@CLBUF		; clear buffers - reinit
+CLBUF1	BR	@CLBUF			; clear buffers - reinit
 
 ;==============================================================================
 
 	; Init buffer pointers and regs
-INIPTR	AND	%>00,R11	; R11 := 0 (why not CLR R11?)
-	CLR	R55		; R55 := 0 (chars to free?)
-	CLR	R56		; R56 := 0
-	CLR	R57		; R57 := 0
-	ORP	%>01,P6		; set P6.0 (DSR/BUSY)
-	MOVD	R41,R3		; R2:3 := R40:41 (input buffer start)
-	MOVD	R43,R7		; R6:7 := R42:43 (output buffer start)
-	MOV	%>20,A		; A := $20
-	STA	*R3		; *R2:3 := $20 (input buffer read ptr)
-	CALL	@INCR3		; inc R2:3 and roll to R40:41 if == R42:43
-	MOVD	R3,R5		; R4:5 := R2:3 (input buffer write ptr)
-	PUSH	R3		; save pointers
-	PUSH	R7
-	PUSH	R6
-	DEC	R3		; R6:7 := ( R6:7 - R2:3 + 1 ) = input buffer size
-	SUB	R3,R7
-	SBB	R2,R6
-	MOVD	R7,R52		; R51:52 := input buffer size - 1
-	DECD	R52
-	TSTA			; = CLR C
-	RRC	R6		; R6:7 /= 2
-	RRC	R7
-	MOVD	R7,R31		; R30:31 := buffer size / 2 (and clears C)
-	RRC	R6		; R6:7 /= 2
-	RRC	R7
-	TSTA			; = CLR C
-	RRC	R6		; R6:7 /= 2
-	RRC	R7
-	MOVD	R7,R33		; R32:33 := buffer size / 8
-	POP	R6		; restore pointers
-	POP	R7
-	POP	R3
-	MOVD	R7,R9		; R8:9 := R6:7 = output buffer write ptr
-	MOVD	R3,R25		; R24:25 last delimiter ptr := R2:3 input buffer read ptr
-	MOVD	R39,R54		; R53:54 := R38:39 = end RAM address + 1
-	SUB	R43,R54		; R53:54 := ( R53:54 - R42:43 ) = output buffer size
-	SBB	R42,R53
-	MOVP	P4,B		; B := APORT
-	AND	%>80,B		; APORT.7 set ? (Delimiter=any)
-	CMP	%>00,B		; useful ?
+INIPTR	AND	%>00,FLAGS2		; FLAGS2  := 0 (why not CLR FLAGS2?)
+	CLR	MATCHED			; MATCHED := 0 (matched chars to discard)
+	CLR	INLENH			; INLENH  := 0
+	CLR	INLENL			; INLENL  := 0
+	ORP	%>01,BPORT		; set BPORT.0 (DSR/BUSY)
+	MOVD	INSTA,INRD		; INRD    := INSTA (input buffer start)
+	MOVD	OUTSTA,OUTRD		; OUTRD   := OUTSTA (output buffer start)
+	MOV	%>20,A			; A       := $20
+	STA	*INRD			; *INRD   := $20 (input buffer read ptr)
+	CALL	@INCINRD		; inc INRD and roll to INSTA if == OUTSTA
+	MOVD	INRD,INWR		; INWR := INRD (input buffer write ptr)
+	PUSH	INRDL			; save pointers
+	PUSH	OUTRDL
+	PUSH	OUTRDH
+	DEC	INRDL			; OUTRD := ( OUTRD - INRD + 1 ) = input buffer size
+	SUB	INRDL,OUTRDL
+	SBB	INRDH,OUTRDH
+	MOVD	OUTRD,INFREE		; INFREE := input buffer size - 1
+	DECD	INFREE
+	TSTA				; = CLR C
+	RRC	OUTRDH			; OUTRD /= 2
+	RRC	OUTRDL
+	MOVD	OUTRD,INLWMX		; INLWMX := buffer size / 2 (and clears C)
+	RRC	OUTRDH			; OUTRD /= 2
+	RRC	OUTRDL
+	TSTA				; = CLR C
+	RRC	OUTRDH			; OUTRD /= 2
+	RRC	OUTRDL
+	MOVD	OUTRD,INHWMX		; INHWMX := buffer size / 8
+	POP	OUTRDH			; restore pointers
+	POP	OUTRDL
+	POP	INRDL
+	MOVD	OUTRD,OUTWR		; OUTWR := OUTRD = output buffer write ptr
+	MOVD	INRD,LSTDELM		; LSTDELM last delimiter ptr := INRD input buffer read ptr
+	MOVD	OUTEND1,OUTFREE		; OUTFREE := OUTEND1 = end RAM address + 1
+	SUB	OUTSTAL,OUTFREE		; OUTFREE := ( OUTFREE - OUTSTA ) = output buffer size
+	SBB	OUTSTAH,OUTFREH
+	MOVP	APORT,B			; B := APORT
+	AND	%>80,B			; APORT.7 set? (Delimiter=any)
+	CMP	%>00,B			; useful?
 	; Jump if not
 	JZ	LF1A6
-	OR	%>01,R11	; R11.0 := 1 if any delimiter
-LF1A6	EINT			; enable interrupts
+	OR	%>01,FLAGS2		; FLAGS2.0 := 1 if any delimiter
+LF1A6	EINT				; enable interrupts
 	RETS
 
 ;==============================================================================
@@ -251,547 +354,554 @@ STROK	TEXT	'O-K'
 	BYTE	>0D
 
 	; Say O.K.
-SAYOK	AND	%>F9,R10	; Clear R10.1 and R10.2: Write to input buffer
+AUDIBLE					; from datasheet
+SAYOK	AND	%>F9,FLAGS1		; Clear FLAGS1.1 and FLAGS1.2: Write to input buffer
 	CLR	B
-LF1B0	LDA	@STROK(B)	; Get char
-	CALL	@STINPB		; Store char in input buffer
-	INC	B		; next char
-	CMP	%>04,B		; loop until 4 chars processed
+LF1B0	LDA	@STROK(B)		; Get char
+	CALL	@STINPB			; Store char in input buffer
+	INC	B			; next char
+	CMP	%>04,B			; loop until 4 chars processed
 	JNZ	LF1B0
-	RETS			; return
+	RETS				; return
 
 ;==============================================================================
 
 	; INT4 handler (serial interrupt)
-INT4	BTJOP	%>02,P17,INT3	; Jump if P17.1 (RXRDY) == 1
-	RETI			; else return from interrupt
+INT4	BTJOP	%>02,SSTAT,INT3		; Jump if P17.1 (RXRDY) == 1
+	RETI				; else return from interrupt
 
 	; INT3 handler (parallel interrupt)
-INT3	PUSH	A		; save A from interrupt
-	BTJO	%>80,R10,LF1D1	; R10.7 (parallel mode) == 1 ? Jump if yes
-	ANDP	%>FE,P16	; Reset P16.0 (disable serial INT4)
+INT3	PUSH	A			; save A from interrupt
+	BTJO	%>80,FLAGS1,LF1D1	; FLAGS1.7 (parallel mode) == 1? Jump if yes
+	ANDP	%>FE,IOCNT1		; Reset IOCNT1.0 (disable serial INT4)
 	; wait RXBUF ready with new character
-WRXRDY	BTJZP	%>02,P17,WRXRDY	; wait RXBUF ready with new character
-	MOVP	P22,A		; get A := RXBUF incoming character
-	JMP	LF1D6		; handle incoming char in A
+WRXRDY	BTJZP	%>02,SSTAT,WRXRDY	; wait RXBUF ready with new character
+	MOVP	RXBUF,A			; get A := RXBUF incoming character
+	JMP	LF1D6			; handle incoming char in A
 
 	; Parallel mode
-LF1D1	ANDP	%>EF,P0		; Disable P0.0 = INT3*
-	LDA	*R47		; Read char from parallel input ($0200)
+LF1D1	ANDP	%>EF,IOCNT0		; Disable IOCNT0.0 = INT3*
+	LDA	*PPARINP		; Read char from parallel input ($0200)
 
 	; Handle incoming char
-LF1D6	CALL	@STINPB		; Store char in input buffer
-	POP	A		; restore A from interrupt
-	BTJO	%>20,R11,LF1E1	; R11.5 == 1 ? (input buffer full) skip next instr if yes
-	CALL	@ENINT		; re-enable parallel or serial interrupt
-LF1E1	RETI			; return from interrupt
+LF1D6	CALL	@STINPB			; Store char in input buffer
+	POP	A			; restore A from interrupt
+	BTJO	%>20,FLAGS2,LF1E1	; FLAGS2.5 == 1? (input buffer full) skip next instr if yes
+	CALL	@ENINT			; re-enable parallel or serial interrupt
+LF1E1	RETI				; return from interrupt
 
 ;==============================================================================
 
 	; Store char in input buffer
-STINPB	PUSH	B		; Save registers
-	PUSH	R10
-	PUSH	R12
-	PUSH	R13
-	AND	%>F9,R10	; reset R10.1 and R10.2: write to input buffer
-	CMP	%>1B,A		; <ESC> ? => clear buffers
-	JNZ	NOTESC		; Skip if not
+STINPB	PUSH	B			; Save registers
+	PUSH	FLAGS1
+	PUSH	BUFPTRH
+	PUSH	BUFPTRL
+	AND	%>F9,FLAGS1		; reset FLAGS1.1 and FLAGS1.2: write to input buffer
+	CMP	%>1B,A			; <ESC>? => clear buffers
+	JNZ	NOTESC			; Skip if not
 
 	; clear buffers - reinit
-CLBUF	ANDP	%>FE,P0		; Disable INT1* (SP0256)
-	CALL	@INIPTR		; Init buffer pointers and regs
-	MOV	%>3A,B		; Init SP
-	LDSP			;
-	MOVD	R45,R27		; R26:27 := R44:45  (SP0256 device)
-	STA	*R27		; *R26:27 := A  (SP0256 device)
-	CALL	@ENINT		; Enable input interrupt (parallel or serial)
-	BR	@POLL		; Polling loop
+CLBUF	ANDP	%>FE,IOCNT0		; Disable INT1* (SP0256)
+	CALL	@INIPTR			; Init buffer pointers and regs
+	MOV	%>3A,B			; Init SP
+	LDSP				;
+	MOVD	PSP0256,ISP0256		; R26:27 := R44:45  (SP0256 device)
+	STA	*ISP0256		; *R26:27 := A  (SP0256 device)
+	CALL	@ENINT			; Enable input interrupt (parallel or serial)
+	BR	@POLL			; Polling loop
 
 	; Not <ESC>
-NOTESC	CMP	%>12,A		; <Ctrl-R> ? => backspace until last delimiter
-	JNZ	NOTCTR		; Skip if not
+NOTESC	CMP	%>12,A			; <Ctrl-R>? => backspace until last delimiter
+	JNZ	NOTCTR			; Skip if not
 
 	; Handle <Ctrl-R>
-	BTJO	%>01,R11,LF21E	; R11.0 == 1 (any delimiter) ? Exit if yes
-	SUB	R25,R3		; R2:3 (input buf read ptr) -= R24:25 (last delimiter)
-	SBB	R24,R2		;	(may not work correctly if rolled...)
-	SUB	R3,R52		; R51:52 (input buffer free size) -= R2:3
-	SBB	R2,R51
-	MOVD	R25,R3		; R2:3 := R24:25 (last delimiter position)
-	MOV	%>01,R57	; input buffer counter LSB(why?) := 1
-LF21E	BR	@XSTINP		; exit handler
+	BTJO	%>01,FLAGS2,LF21E	; FLAGS2.0 == 1 (any delimiter)? Exit if yes
+	SUB	LSTDLML,INRDL		; INRD (input buf read ptr) -= LSTDELM (last delimiter)
+	SBB	LSTDLMH,INRDH		;	(may not work correctly if rolled...)
+	SUB	INRDL,INFREEL		; INFREE (input buffer free size) -= INRD
+	SBB	INRDH,INFREEH
+	MOVD	LSTDELM,INRD		; INRD := LSTDELM (last delimiter position)
+	MOV	%>01,INLENL		; input buffer counter LSB(why?) := 1
+LF21E	BR	@XSTINP			; exit handler
 
 	; Not <Ctrl-R>
-NOTCTR	CMP	%>08,A		; <BkSp> ?
-	JNZ	NOTBKS		; Skip if not
+NOTCTR	CMP	%>08,A			; <BkSp>?
+	JNZ	NOTBKS			; Skip if not
 
 	; Handle <BkSp>
-	CMP	R2,R4		; Input buffer pointers equal ?
+	CMP	INRDH,INWRH		; Input buffer pointers equal?
 	JNZ	LF22F
-	CMP	R3,R5
-	JZ	XSTINP		; If yes, exit handler
-LF22F	PUSH	R3		; Save R2:3
-	PUSH	R2
-	MOVD	R5,R3		; R2:3 := R4:5 input buffer write ptr
-	CALL	@DECR3		; dec R2:3 and roll if needed
-	MOVD	R3,R5		; R4:5 := R2:3
-	POP	R2		; restore R2:3
-	POP	R3
-	INC	R52		; Inc R51:52 input buffer free size
+	CMP	INRDL,INWRL
+	JZ	XSTINP			; If yes, exit handler
+LF22F	PUSH	INRDL			; Save INRD
+	PUSH	INRDH
+	MOVD	INWR,INRD		; INRD := INWR input buffer write ptr
+	CALL	@DECINRD		; dec INRD and roll if needed
+	MOVD	INRD,INWR		; INWR := INRD
+	POP	INRDH			; restore INRD
+	POP	INRDL
+	INC	INFREEL			; Inc INFREE input buffer free size
 	JNC	XSTINP
-	INC	R51
-	JMP	XSTINP		; exit handler
+	INC	INFREEH
+	JMP	XSTINP			; exit handler
 
 	; Not <BkSp>: Handle other chars
-NOTBKS	CMP	%>27,A		; ''' ?
-	JZ	STOCHR		; Jump if yes
-	CMP	%>7B,A		; higher than 'z' ?
-	JP	DELIMT		; Jump if yes
-	CMP	%>30,A		; '0'..'9' ?
+NOTBKS	CMP	%>27,A			; '''?
+	JZ	STOCHR			; Jump if yes
+	CMP	%>7B,A			; higher than 'z'?
+	JP	DELIMT			; Jump if yes
+	CMP	%>30,A			; '0'..'9'?
 	JN	DELIMT
 	CMP	%>3A,A
 	JN	STOCHR
-	CMP	%>41,A		; >= 'A' ?
+	CMP	%>41,A			; >= 'A'?
 	JPZ	STOCHR
 
 	; Delimiter (not letter/digit/')
-DELIMT	BTJO	%>01,R11,LF267	; R11.0 set (any delimiter) ? Jump if yes
-	CMP	%>0D,A		; <CR> ?
-	JNZ	LF26A		; skip if not
-	OR	%>10,R11	; R11.4 := 1 (found CR => exit idle loop)
-LF267	MOVD	R3,R25		; R24:25 := R2:3 (last delimiter position)
-LF26A	OR	%>80,A		; A.7 := 1 (set high bit)
-	INC	R57		; Increment R56:57 (# of bytes in input buffer)
-	JNC	STOCHR		; put char in buffer
-	INC	R56
+DELIMT	BTJO	%>01,FLAGS2,LF267	; FLAGS2.0 set (any delimiter)? Jump if yes
+	CMP	%>0D,A			; <CR>?
+	JNZ	LF26A			; skip if not
+	OR	%>10,FLAGS2		; FLAGS2.4 := 1 (found CR => exit idle loop)
+LF267	MOVD	INRD,LSTDELM		; LSTDELM := INRD (last delimiter position)
+LF26A	OR	%>80,A			; A.7 := 1 (set high bit) if delimiter
+	INC	INLENL			; Increment INFREE (# of bytes in input buffer)
+	JNC	STOCHR			; put char in buffer
+	INC	INLENH
 
 	; put char in buffer
-STOCHR	CALL	@RWBUFR		; write char in buffer
-	BTJZ	%>20,R11,XSTINP	; R11.5 set (inp buffer full)? if not exit handler
-	MOV	%>8D,A		; A := <CR> + $80
-	INC	R57		; Increment R56:57 (# of bytes in input buffer)
-	JNC	LF281
-	INC	R56
-LF281	CALL	@RWBUFR		; write char in buffer
+STOCHR	CALL	@RWBUFR			; write char in buffer
+	BTJZ	%>20,FLAGS2,XSTINP	; FLAGS2.5 set (inp buffer full)? if not exit handler
+	MOV	%>8D,A			; A := <CR> + $80
+	INC	INLENL			; Increment INFREE (# of bytes in input buffer)
+	JNC	DINC1
+	INC	INLENH
+DINC1	CALL	@RWBUFR			; write char in buffer
 	; exit handler
-XSTINP	POP	R13		; Restore registers
-	POP	R12
-	POP	R10
+XSTINP	POP	BUFPTRL			; Restore registers
+	POP	BUFPTRH
+	POP	FLAGS1
 	POP	B
-	RETS			; end of input char handling
+	RETS				; end of input char handling
 
 ;==============================================================================
 
-	; R10:7 ? (enable INT3) : (enable INT4)
-ENINT	BTJZ	%>80,R10,ENINT4	; enable INT4
-	ORP	%>10,P0
+	; FLAGS1:7 ? (enable INT3) : (enable INT4)
+ENINT	BTJZ	%>80,FLAGS1,ENINT4	; enable INT4
+	ORP	%>10,IOCNT0
 	RETS
 
 	; enable INT4
-ENINT4	ORP	%>01,P16
+ENINT4	ORP	%>01,IOCNT1
 	RETS
 
 ;==============================================================================
 
 	; select input or output buffer and read/store byte in it
-RWBUFR	BTJO	%>02,R10,RDBUF	; R10.1 set ? Jump if yes (read from either buffer)
+RWBUFR	BTJO	%>02,FLAGS1,RDBUF	; FLAGS1.1 set? Jump if yes (read from either buffer)
 
 	; write to input or output buffer
-	BTJO	%>04,R10,WROBUF	; R10.2 set ? Jump if yes (output buffer)
-	MOVD	R5,R13		; R12:13 := R4:5 input buffer write ptr
-	DECD	R52		; Decrement # of free input buffer bytes
-	JMP	WRBUF		; Store A in buffer
+	BTJO	%>04,FLAGS1,WROBUF	; FLAGS1.2 set? Jump if yes (output buffer)
 
-WROBUF	MOVD	R9,R13		; R12:13 := R8:9 output buffer write ptr
-	DECD	R54		; Decr output buffer free size
+	; write to input buffer
+	MOVD	INWR,BUFPTR		; BUFPTR := INWR input buffer write ptr
+	DECD	INFREE			; Decrement # of free input buffer bytes
+	JMP	WRBUF			; Store A in buffer
 
-	; Store byte A in buffer
-WRBUF	STA	*R13		; *R12:13 := A (store byte in buffer)
-	LDA	@>000D		; A := R13 (why using LDA?)
-	ADD	%>01,R13	; Increment R12:13
-	ADC	%>00,R12
-	CALL	@ROLR13		; Roll R12:13 if needed
-	BTJO	%>04,R10,WOBUFX	; R10.2 set ? Jump if yes (output buffer)
-	MOVD	R13,R5		; R4:5 := R12:13 (inp buffer write ptr)
-WRBUFX	CALL	@CHKBUF		; Check if inp or out buffer full or above HWM
-	RETS			; return
+	; write to output buffer
+WROBUF	MOVD	OUTWR,BUFPTR		; BUFPTR := OUTWR output buffer write ptr
+	DECD	OUTFREE			; Decr output buffer free size
 
-WOBUFX	MOVD	R13,R9		; R8:9 := R12:13 (out buffer write ptr)
-	JMP	WRBUFX		; Check buffer and return
+	; Write byte A to buffer
+WRBUF	STA	*BUFPTR			; *BUFPTR := A (store byte in buffer)
+	LDA	@XBUFPTR		; A := BUFPTR (why using LDA?)
+	ADD	%>01,BUFPTRL		; Increment BUFPTR
+	ADC	%>00,BUFPTRH
+	CALL	@ROLBUFP		; Roll BUFPTR if needed
+	BTJO	%>04,FLAGS1,WOBUFX	; FLAGS1.2 set? Jump if yes (output buffer)
+	MOVD	BUFPTR,INWR		; INWR := BUFPTR (inp buffer write ptr)
+WRBUFX	CALL	@CHKBUF			; Check if inp or out buffer full or above HWM
+	RETS				; return
+
+WOBUFX	MOVD	BUFPTR,OUTWR		; OUTWR := BUFPTR (out buffer write ptr)
+	JMP	WRBUFX			; Check buffer and return
 
 	; read from input or output buffer
-RDBUF	BTJO	%>04,R10,RDOBUF	; R10.2 set ? jump if yes (output buffer)
+RDBUF	BTJO	%>04,FLAGS1,RDOBUF	; FLAGS1.2 set? jump if yes (output buffer)
 
 	; read from input buffer
-	MOVD	R3,R13		; R12:13 := R2:3 input buffer read ptr
-	BTJO	%>02,R11,RDBUF1	; R11.1 set ? Jump if yes
-	INC	R55		; inc R55 if not... (Free bytes? TODO: clarify)
-	JMP	RDBUF1		; Read byte
+	MOVD	INRD,BUFPTR		; BUFPTR := INRD input buffer read ptr
+	BTJO	%>02,FLAGS2,RDBUF1	; FLAGS2.1 set? Jump if yes
+	INC	MATCHED			; inc MATCHED if not... (matched chars to discard)
+	JMP	RDBUF1			; Read byte
 
 	; read from output buffer
-RDOBUF	MOVD	R7,R13		; R12:13 := R6:7 out buffer read ptr
-	INC	R54		; Inc R53:54 = Out free bytes? (TODO: clarify)
+RDOBUF	MOVD	OUTRD,BUFPTR		; BUFPTR := OUTRD out buffer read ptr
+	INC	OUTFREL			; Inc OUTFREE = Out free bytes? (TODO: clarify)
 	JNC	RDBUF1
-	INC	R53
+	INC	OUTFREH
 
-	; Read byte from buffer
-RDBUF1	LDA	*R13		; Read byte
-	BTJO	%>04,R10,LF2F3	; R10.2 set ? jump if yes (out buffer)
+	; Read A from buffer
+RDBUF1	LDA	*BUFPTR			; Read byte
+	BTJO	%>04,FLAGS1,LF2F3	; FLAGS1.2 set? jump if yes (out buffer)
 
-	BTJZ	%>80,A,LF2F0	; Is high bit set ? Jump if not
-	OR	%>01,R10	; R10.0 := A.7 = char high bit
+	BTJZ	%>80,A,LF2F0		; Is high bit set? Jump if not
+	OR	%>01,FLAGS1		; FLAGS1.0 := A.7 = char high bit = delimiter flag
 	JMP	LF2F3
 
-LF2F0	AND	%>FE,R10
+LF2F0	AND	%>FE,FLAGS1		; clear FLAGS1.0 = delimiter flag
 
 	; Incr buffer read pointer
 LF2F3	PUSH	A
-	LDA	@>000D		; A := R13 (why?)
-	ADD	%>01,R13	; increment R12:13
-	ADC	%>00,R12
-	CALL	@ROLR13		; Roll if needed
-	BTJO	%>04,R10,ROBUFX	; jump if output buffer
+	LDA	@XBUFPTR		; A := BUFPTR (why?)
+	ADD	%>01,BUFPTRL		; increment BUFPTR
+	ADC	%>00,BUFPTRH
+	CALL	@ROLBUFP		; Roll if needed
+	BTJO	%>04,FLAGS1,ROBUFX	; jump if output buffer
 
 	; update input buffer read ptr
-	MOVD	R13,R3		; R2:3 := R12:13
-	POP	A		; restore character
-	RETS			; return
+	MOVD	BUFPTR,INRD		; INRD := BUFPTR
+	POP	A			; restore character
+	RETS				; return
 
 	; update output buffer read ptr
-ROBUFX	MOVD	R13,R7		; R6:7 := R12:13
-	CALL	@CKOBUF		; Check if output buffer full or above HWM
-	POP	A		; restore allophone
+ROBUFX	MOVD	BUFPTR,OUTRD		; OUTRD := BUFPTR
+	CALL	@CKOBUF			; Check if output buffer full or above HWM
+	POP	A			; restore allophone
 	RETS
 
 ;==============================================================================
 
-	; Roll R12:R13 according to active buffer (R10.2)
-	; - if R10.2 set (output buffer active):
-	;	to R42:43 (out buffer start) if reached R38:39 (out buffer end)
-	; - if R10.2 not set (input buffer active):
-	;	to R40:41 (in buffer start)  if reached R42:43 (in buffer end)
-ROLR13	BTJO	%>04,R10,ROLOUT	; Roll output buffer
+	; Roll BUFPTR according to active buffer (FLAGS1.2)
+	; - if FLAGS1.2 set (output buffer active):
+	;	to OUTSTA (out buffer start) if reached OUTEND1 (out buffer end)
+	; - if FLAGS1.2 not set (input buffer active):
+	;	to INSTA (in buffer start)  if reached OUTSTA (in buffer end)
+ROLBUFP	BTJO	%>04,FLAGS1,ROLOUT	; Roll output buffer
 	; Roll input buffer
-ROLINP	CMP	R43,R13
+ROLINP	CMP	OUTSTAL,BUFPTRL
 	JNZ	LF322
-	CMP	R42,R12
+	CMP	OUTSTAH,BUFPTRH
 	JNZ	LF322
-	MOVD	R41,R13
+	MOVD	INSTA,BUFPTR
 LF322	RETS
 
 	; Roll output buffer
-ROLOUT	CMP	R39,R13
+ROLOUT	CMP	OUTEN1L,BUFPTRL
 	JNZ	LF330
-	CMP	R38,R12
+	CMP	OUTEN1H,BUFPTRH
 	JNZ	LF330
-	MOVD	R43,R13
+	MOVD	OUTSTA,BUFPTR
 LF330	RETS
 
 ;==============================================================================
 
 	; Check if inp or out buffer full or above HWM
-CHKBUF	BTJZ	%>04,R10,CKIBUF	; Send XON/XOFF if needed
+CHKBUF	BTJZ	%>04,FLAGS1,CKIBUF	; Send XON/XOFF if needed
 
 	; Check if output buffer full or above high water mark
-CKOBUF	CMP	%>01,R53	; Only 1 free byte in output buffer ?
-	JZ	LF343		; jump if yes
-	CMP	R50,R54		; R54>R50 ? (output counter >= HWM ?)
-	JP	LF343		; jump if yes
-	OR	%>08,R11	; set R11.3 (output buffer full)
+CKOBUF	CMP	%>01,OUTFREH		; Only 1 free byte in output buffer?
+	JZ	LF343			; jump if yes
+	CMP	OUTHWM,OUTFREL		; OUTFREE > OUTHWM? (output counter >= HWM?)
+	JP	LF343			; jump if yes
+	OR	%>08,FLAGS2		; set FLAGS2.3 (output buffer full)
 	RETS
 
-LF343	AND	%>F7,R11	; reset R11.3 (output buffer not full)
+LF343	AND	%>F7,FLAGS2		; reset FLAGS2.3 (output buffer not full)
 	RETS
 
 	; Check if input buffer full or above high water mark
-CKIBUF	CMP	%>00,R51	; Free bytes in input buffer ?
-	JP	LF356		; jump if yes
-	CMP	%>01,R52
+CKIBUF	CMP	%>00,INFREEH		; Free bytes in input buffer?
+	JP	LF356			; jump if yes
+	CMP	%>01,INFREEL
 	JP	LF356
-	OR	%>20,R11	; set R11.5 (input buffer full)
-	JMP	TXOFF		; Send XOFF, clear DTR/BUSY*
+	OR	%>20,FLAGS2		; set FLAGS2.5 (input buffer full)
+	JMP	TXOFF			; Send XOFF, clear DTR/BUSY*
 
 	; Input buffer not full
-LF356	CMP	R30,R51		; R50:51 inp buf free bytes < 1/2 size ?
-	JN	LF362		; Jump if yes
-	JP	TXON		; Else send XON, set DTR/BUSY*
-	CMP	R31,R52
+LF356	CMP	INLWMH,INFREEH		; INFREE inp buf free bytes < 1/2 size?
+	JN	LF362			; Jump if yes
+	JP	TXON			; Else send XON, set DTR/BUSY*
+	CMP	INLWML,INFREEL
 	JPZ	TXON
-LF362	CMP	R32,R51		; R50:51 inp buf free bytes < 1/8 size ?
-	JP	LF384		; Jump if not
-	JN	LF36E		; Else Send XOFF, clear DTR/BUSY*
-	CMP	R33,R52
+LF362	CMP	INHWMH,INFREEH		; INFREE inp buf free bytes < 1/8 size?
+	JP	LF384			; Jump if not
+	JN	LF36E			; Else Send XOFF, clear DTR/BUSY*
+	CMP	INHWML,INFREEL
 	JP	LF384
 
-LF36E	OR	%>04,R11	; set R11.2: input buffer above HWM
+LF36E	OR	%>04,FLAGS2		; set FLAGS2.2: input buffer above HWM
 
 	; Send XOFF, clear DTR/BUSY*
-TXOFF	ANDP	%>FE,P6		; clear P6.0 (DSR/BUSY=true)
-	MOVP	%>13,P23	; TXBUF := XOFF
+TXOFF	ANDP	%>FE,BPORT		; clear BPORT.0 (DSR/BUSY=true)
+	MOVP	%>13,TXBUF		; TXBUF := XOFF
 	RETS
 
 	; Send XON, set DTR/BUSY*
-TXON	AND	%>DB,R11
-	CALL	@ENINT		; R10:7 = parallel mode ? (enable INT3) : (enable INT4)
-	ORP	%>01,P6		; set P6.0 (DSR/BUSY=false)
-	MOVP	%>11,P23	; TXBUF := XON
-LF384	RETS			; Return
+TXON	AND	%>DB,FLAGS2
+	CALL	@ENINT			; FLAGS1:7 = parallel mode ? (enable INT3) : (enable INT4)
+	ORP	%>01,BPORT		; set BPORT.0 (DSR/BUSY=false)
+	MOVP	%>11,TXBUF		; TXBUF := XON
+LF384	RETS				; Return
 
 ;==============================================================================
 
 	; INT1 handler (SP0256)
-INT1	ANDP	%>FE,P0		; Disable P0.0 = INT1*
-	PUSH	A		; save regs
+INT1	ANDP	%>FE,IOCNT0		; Disable IOCNT0.0 = INT1*
+	PUSH	A			; save regs
 	PUSH	B
-	PUSH	R10
-	PUSH	R12
-	PUSH	R13
-	OR	%>06,R10	; select "read from output buffer"
-	CALL	@RWBUFR		; do the read
-	MOVD	R45,R27		; R26:27:= R44:45 SP0256 base address
-	ADD	R0,R27		; Add allophone code to the address
-	STA	*R27		; Write any byte to that address (value doesn't care)
-	POP	R13		; restore regs
-	POP	R12
-	POP	R10
+	PUSH	FLAGS1
+	PUSH	BUFPTRH
+	PUSH	BUFPTRL
+	OR	%>06,FLAGS1		; select "read from output buffer"
+	CALL	@RWBUFR			; do the read
+	MOVD	PSP0256,ISP0256		; ISP0256 := PSP0256 SP0256 base address
+	ADD	REGA,ISP0256		; Add allophone code to the address
+	STA	*ISP0256		; Write any byte to that address (value doesn't care)
+	POP	BUFPTRL			; restore regs
+	POP	BUFPTRH
+	POP	FLAGS1
 	POP	B
 	POP	A
-	CMP	R7,R9		; Buffer empty ?
-	JZ	LF3AE		; skip if yes
-	ORP	%>01,P0		; else enable P0.0 = INT1*
-LF3AE	RETI			; return from interrupt
+	CMP	OUTRDL,OUTWRL		; Buffer empty?
+	JZ	LF3AE			; skip if yes
+	ORP	%>01,IOCNT0		; else enable IOCNT0.0 = INT1*
+LF3AE	RETI				; return from interrupt
 
 ;==============================================================================
 
 	; select rules set
-SELRUL	CMP	%>30,A
-	JPZ	LF3B5
-	JMP	LF3DF		; < '0' => rules for punctuation
+SELRUL	CMP	%>30,A			; A >='0'?
+	JPZ	SELRUL1			; jump if yes
+	JMP	SELPCT			; < '0' => rules for punctuation
 
-LF3B5	CMP	%>3A,A
-	JPZ	LF3C1
-	MOVD	%RULNUM,R21	; Rules for digits
-	AND	%>DF,R10	; Non-letters rules
+SELRUL1	CMP	%>3A,A			; A >='9'+1?
+	JPZ	SELRUL2			; jump if yes
+	MOVD	%RULNUM,RULPTR		; select rules for digits
+	AND	%>DF,FLAGS1		; Non-letters rules
+	RETS				; done
+
+SELRUL2	CMP	%>41,A			; A >='A'?
+	JPZ	SELRUL3			; jump if yes
+	JMP	SELPCT			; < 'A' => rules for punctuation
+
+SELRUL3	CMP	%>5B,A			; A >='Z'+1?
+	JPZ	SELRUL4			; jump if yes
+	OR	%>20,FLAGS1		; Letters rules
 	RETS
 
-LF3C1	CMP	%>41,A
-	JPZ	LF3C7
-	JMP	LF3DF
+SELRUL4	CMP	%>61,A			; A >='a'?
+	JPZ	SELRUL5			; jump if yes
+	JMP	SELPCT			; < 'a' => rules for punctuation
 
-LF3C7	CMP	%>5B,A
-	JPZ	LF3CF
-	OR	%>20,R10	; Letters rules
-	RETS
+SELRUL5	CMP	%>7B,A			; A >='z'+1?
+	JPZ	SELPCT			; jump if yes
+	SUB	%>20,A			; A -= $20 (convert to upper case)
+	OR	%>20,FLAGS1		; Letters rules
+	RETS				; done
 
-LF3CF	CMP	%>61,A
-	JPZ	LF3D5
-	JMP	LF3DF
-
-LF3D5	CMP	%>7B,A
-	JPZ	LF3DF
-	SUB	%>20,A
-	OR	%>20,R10	; Letters rules
-	RETS
-
-LF3DF	AND	%>DF,R10	; Non-letters rules
-	MOVD	%RLPNCT,R21	; Rules for punctuation
+SELPCT	AND	%>DF,FLAGS1		; Non-letters rules
+	MOVD	%RLPNCT,RULPTR		; Rules for punctuation
 	RETS
 
 ;==============================================================================
 
 	; Encode text to allophones
-ENCODE	CMP	%>00,R48	; EPROM active ?
+ENCODE	CMP	%>00,JEPROMH		; EPROM active?
 	; Skip if not
-	JZ	LF3EE
-	BR	*R49		; Jump in EPROM
+	JZ	ENCODE1
+	BR	*JEPROM			; Jump in EPROM
 
-LF3EE	MOVD	R3,R17		; R16:17 := R2:3 (backward input buffer read ptr)
-	CALL	@DECR17		; dec R16:17 and roll if needed
-LF3F4	CALL	@FETCH		; Fetch char and mask high bit
-	BTJZ	%>01,R10,LF400	; R11.7 := R10.0 (character high bit)
-	OR	%>80,R11
-	JMP	LF403
+ENCODE1	MOVD	INRD,INRDB		; INRDB := INRD (backward input buffer read ptr)
+	CALL	@DECINRB		; dec INRDB and roll if needed
 
-LF400	AND	%>7F,R11
-LF403	CALL	@SELRUL		; select rules set
-	BTJZ	%>20,R10,LF41B	; R10.5 set (rules for letters) ? jump if no
+	; Main encoder loop
+ENCODL1	CALL	@FETCH			; Fetch char and mask high bit
+	BTJZ	%>01,FLAGS1,ENCODE2	; FLAGS2.7 := FLAGS1.0 (delimiter flag)
+	OR	%>80,FLAGS2
+	JMP	ENCODE3
 
-	CLR	B		; useful?
-	SUB	%>41,A		; A -= 'A'
-	MPY	%>02,A		; AB := A * 2
-	ADD	%>02,B		; B += 2
-	LDA	@TABRUL(B)	; Index of rules tables
-	MOV	A,R20		; R20 := MSB of letter rules table
-	LDA	@TABRU1(B)	; Index of rules tables LSB
-	MOV	A,R21		; R21 := LSB of letter rules table
+ENCODE2	AND	%>7F,FLAGS2
+ENCODE3	CALL	@SELRUL			; select rules set
+	BTJZ	%>20,FLAGS1,ENCODE4	; FLAGS1.5 set (rules for letters)? jump if no
 
-LF41B	MOV	%>01,B		; B := 1 (number of '[') to seek
-	CALL	@RSEEKB		; right seek 1st '['
+	CLR	B			; useful?
+	SUB	%>41,A			; A -= 'A'
+	MPY	%>02,A			; AB := A * 2
+	ADD	%>02,B			; B += 2
+	LDA	@TABRUL(B)		; Index of rules tables
+	MOV	A,RULPTRH		; RULPTRH := MSB of letter rules table
+	LDA	@TABRU1(B)		; Index of rules tables LSB
+	MOV	A,RULPTRL		; RULPTRL := LSB of letter rules table
 
-	; Compare chars between [ ]
-LF420	CALL	@CMPBKT		; compare in-brackets
-	BTJO	%>10,R10,LF467	; R10.4 set (match failed) ? Jump if yes
+ENCODE4	MOV	%>01,B			; B := 1 (number of '[') to seek
+	CALL	@RSEEKB			; right seek 1st '['
+
+	; Loop 2: Compare chars between [ ]
+ENCODL2	CALL	@CMPBKT			; compare in-brackets
+	BTJO	%>10,FLAGS1,ENCODF1	; FLAGS1.4 set (match failed)? Jump if yes
 
 	; Check patterns after ]
-	MOVD	R17,R29		; R28:29 := R16:17 (save backward input buffer read ptr)
-	AND	%>BF,R10	; clear R10.6 (read input using R2:3)
-	CALL	@CHKPAT		; Check rule pattern
-	BTJO	%>10,R10,LF467	; R10.4 set (match failed) ? Jump if yes
+	MOVD	INRDB,INRDLB		; INRDLB := INRDB (save backward input buffer read ptr)
+	AND	%>BF,FLAGS1		; clear FLAGS1.6 (read input using INRD)
+	CALL	@CHKPAT			; Check rule pattern
+	BTJO	%>10,FLAGS1,ENCODF1	; FLAGS1.4 set (match failed)? Jump if yes
 
 	; Check patterns before [
-	CALL	@LSEEKB		; left seek '['
-	OR	%>40,R10	; set R10.6 (read input using R16:17)
-	CALL	@CHKPAT		; Check rule pattern
-	BTJO	%>10,R10,LF47A	; R10.4 set (match failed) ? Jump if yes
+	CALL	@LSEEKB			; left seek '['
+	OR	%>40,FLAGS1		; set FLAGS1.6 (read input using INRDB)
+	CALL	@CHKPAT			; Check rule pattern
+	BTJO	%>10,FLAGS1,ENCODF2	; FLAGS1.4 set (match failed)? Jump if yes
 
 	; Matching Rule found
-	ADD	R55,R52		; R51:52 += R55 (free preceding chars?)
-	ADC	%>00,R51
-	CLR	R55		; no more chars to free
+	ADD	MATCHED,INFREEL		; INFREE += MATCHED (discard preceding chars)
+	ADC	%>00,INFREEH
+	CLR	MATCHED			; no more chars to discard
 
 	; Seek allophones to output
-	AND	%>FD,R11	; clear R11.1 (allow to count chars to free in R55)
-	MOV	%>02,B		; B := 2 (number of '[') to seek
-	CALL	@RSEEKB		; right seek 2nd '[' => 1st allophone
+	AND	%>FD,FLAGS2		; clear FLAGS2.1 (allow to count chars to discard in MATCHED)
+	MOV	%>02,B			; B := 2 (number of '[') to seek
+	CALL	@RSEEKB			; right seek 2nd '[' => 1st allophone
 
 	; Write allophones
-	CALL	@WRALLO		; Write allophones
+	CALL	@WRALLO			; Write allophones
 
 	; Next input character
-	MOVD	R15,R3		; R2:3 := R14:15 - restore input buffer read ptr
-	MOVD	R3,R17		; R16:17 := R2:3 - copy to backward input buffer read ptr
-	CALL	@DECR17		; dec R16:17 and roll to R36:37 if == R34:35
-	BTJZ	%>80,R11,LF3F4	; High bit of char was set (final?) ? Jump if not
+	MOVD	INRDP,INRD		; INRD := INRDP - restore input buffer read ptr
+	MOVD	INRD,INRDB		; INRDB := INRD - copy to backward input buffer read ptr
+	CALL	@DECINRB		; dec INRDB and roll to INEND if == INSTA1
+	BTJZ	%>80,FLAGS2,ENCODL1	; High bit of char was set (delimiter)? Jump if not
 
 	; Finalize and return
-	DECD	R57		; dec R56:57 (number of bytes in input buffer?)
-	CALL	@CKIBUF		; Check if input buffer full or above high water mark
-	RETS			; return
+	DECD	INLEN			; dec INFREE (number of bytes in input buffer?)
+	CALL	@CKIBUF			; Check if input buffer full or above high water mark
+	RETS				; return
 
 	; Match failed after opening [ => seek next rule
-LF467	INC	R21		; inc R20:21 rule pointer
-	JNC	LF46D
-	INC	R20
-LF46D	MOV	%>02,B		; B := 2 (number of '[') to seek
+ENCODF1	INC	RULPTRL			; inc RULPTR rule pointer
+	JNC	DINC2
+	INC	RULPTRH
+DINC2	MOV	%>02,B			; B := 2 (number of '[') to seek
 
-	; Seek next rule opening [
-LF46F	CALL	@RSEEKB		; right seek 2nd or 3rd '[' => next pattern '['
-	MOV	%>01,R55	; R55 := 1 (one char to free?)
-	AND	%>FD,R11	; clear R11.1 (allow to count chars to free in R55)
-	JMP	LF420		; check next rule
+	; Loop: Seek next rule opening [
+ENCODL3	CALL	@RSEEKB			; right seek 2nd or 3rd '[' => next pattern '['
+	MOV	%>01,MATCHED		; MATCHED := 1 (one char to discard)
+	AND	%>FD,FLAGS2		; clear FLAGS2.1 (allow to count chars to free in MATCHED)
+	JMP	ENCODL2			; check next rule
 
 	; Match failed before opening [ => seek next rule
-LF47A	MOV	%>03,B		; B := 3 (number of '[') to seek
-	JMP	LF46F		; right seek 3rd '[' and check next rule
+ENCODF2	MOV	%>03,B			; B := 3 (number of '[') to seek
+	JMP	ENCODL3			; right seek 3rd '[' and check next rule
 
 ;==============================================================================
 
 	; left seek '['
-LSEEKB	LDA	*R21		; A := *R20:21
-	BTJZ	%>40,A,LF484	; A.6 set ('[' found) ? jump if not
-	RETS			; else return
+LSEEKB	LDA	*RULPTR			; A := *RULPTR
+	BTJZ	%>40,A,LSEEBB1		; A.6 set ('[' found)? jump if not
+	RETS				; else return
 
-LF484	DECD	R21		; dec R20:21
-	JMP	LSEEKB		; and loop
+LSEEBB1	DECD	RULPTR			; dec RULPTR
+	JMP	LSEEKB			; and loop
 
 ;==============================================================================
 
 	; right seek Bth '['
-RSEEKB	CLR	R23		; R23 := 0
+RSEEKB	CLR	COUNTER			; COUNTER := 0
 
-LF48A	LDA	*R21		; A := *R20:21
-	BTJZ	%>40,A,LF496	; A.6 set ('[' found) ? jump if not
-	INC	R23		; inc R23
-	CMP	R23,B		; jump if R23 != B
-	JNZ	LF496
-	RETS			; else return: found
+RSEEKB1	LDA	*RULPTR			; A := *RULPTR
+	BTJZ	%>40,A,RSEEKB2		; A.6 set ('[' found)? jump if not
+	INC	COUNTER			; inc COUNTER
+	CMP	COUNTER,B		; jump if COUNTER != B
+	JNZ	RSEEKB2
+	RETS				; else return: found
 
-LF496	INC	R21		; inc R20:21
-	JNC	LF49C
-	INC	R20
-LF49C	JMP	LF48A		; and loop
+RSEEKB2	INC	RULPTRL			; inc RULPTR
+	JNC	DINC3
+	INC	RULPTRH
+DINC3	JMP	RSEEKB1			; and loop
 
 ;==============================================================================
 
 	; Write allophones
-WRALLO	CLR	R23		; R23 := 0
-	LDA	*R21		; A := *R20:21
-	CMP	%>FF,A		; A == $FF ?
-	JZ	LF4C1		; jump if yes
-	BTJZ	%>80,A,LF4AB	; A.7 set (']' found) ? jump if not
-	INC	R23		; else inc R23
-LF4AB	AND	%>3F,A		; mask A.6 and A.7
-	AND	%>FD,R10	; clear R10.1 (write in buffer)
-	OR	%>04,R10	; set R10.2 (output buffer)
-	CALL	@RWBUFR		; write allophone in buffer
-	INC	R21		; inc R20:21
-	JNC	LF4BC
-	INC	R20
-LF4BC	CMP	%>01,R23	; ']' found ?
-	JNZ	WRALLO		; loop if not
-LF4C1	RETS			; else return
+WRALLO	CLR	COUNTER			; COUNTER := 0 (flag for exit)
+	LDA	*RULPTR			; A := *RULPTR
+	CMP	%>FF,A			; A == $FF?
+	JZ	WRALLOX			; exit if yes: no allophone to send
+	BTJZ	%>80,A,WRALLO1		; A.7 set (']' found)? jump if not
+	INC	COUNTER			; else inc COUNTER
+WRALLO1	AND	%>3F,A			; mask A.6 and A.7
+	AND	%>FD,FLAGS1		; clear FLAGS1.1 (write in buffer)
+	OR	%>04,FLAGS1		; set FLAGS1.2 (output buffer)
+	CALL	@RWBUFR			; write allophone in buffer
+	INC	RULPTRL			; inc RULPTR
+	JNC	DINC4			;
+	INC	RULPTRH			;
+DINC4	CMP	%>01,COUNTER		; ']' found?
+	JNZ	WRALLO			; loop if not
+WRALLOX	RETS				; else return
 
 ;==============================================================================
 
 	; compare in-brackets
-CMPBKT	MOVD	R3,R19		; R18:19 := R2:3 (input read ptr)
-	AND	%>F7,R10	; clear R10.3
-	BTJZ	%>20,R10,LF4D4	; R10.5 letter rules? jump if not
-	LDA	*R21		; A := *R20:21
-	CMP	%>FF,A		; A == $FF ? (single letter/end of rules)
-	JNZ	LF4DD		; jump if not to letter rules
-	JMP	LF502		; else exit (success)
+CMPBKT	MOVD	INRD,INRDLX		; INRDLX := INRD (input read ptr)
+	AND	%>F7,FLAGS1		; clear FLAGS1.3
+	BTJZ	%>20,FLAGS1,CMPNLTR	; FLAGS1.5 letter rules? jump if not
+	LDA	*RULPTR			; A := *RULPTR
+	CMP	%>FF,A			; A == $FF? (single letter/end of rules)
+	JNZ	CMPLTR			; jump if not to letter rules
+	JMP	CMPEND			; else exit (success)
 
-	; not letter rules
-LF4D4	CMP	%>FF,A		; A == $FF ?
-	JZ	LF502		; exit if yes (success)
-	CALL	@DECR3		; dec R2:3 and roll if needed
-	DEC	R55		; dec R55 (chars to free?)
+	; not letter rules: check 1st char, otherwise implicit
+CMPNLTR	CMP	%>FF,A			; A == $FF?
+	JZ	CMPEND			; exit if yes (success)
+	CALL	@DECINRD		; dec INRD and roll if needed
+	DEC	MATCHED			; dec MATCHED (matched chars to discard)
 
 	; letter rules
-LF4DD	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>61,A		; lower case ?
-	JN	LF4E6		; skip if not
-	SUB	%>20,A		; else adjust to upper case
-LF4E6	SUB	%>20,A		; adjust to range 00-3F
-	MOV	A,B		; B := A
-	LDA	*R21		; A := *R20:21
-	BTJZ	%>80,A,LF4F1	; A.7 set (']' found) ? Skip if not
-	OR	%>08,R10	; else set R10.3
-LF4F1	AND	%>3F,A		; mask A.6 and A.7
-	CMP	R0,B		; A == B ?
-	JZ	LF4FE		; jump if yes
-	OR	%>10,R10	; set R10.4: pattern match failed
-	MOVD	R19,R3		; R2:3 := R18:19
-	RETS			; return (failed)
+CMPLTR	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>61,A			; lower case?
+	JN	CMPLTR1			; skip if not
+	SUB	%>20,A			; else adjust to upper case
+CMPLTR1	SUB	%>20,A			; adjust to range 00-3F
+	MOV	A,B			; B := A
+	LDA	*RULPTR			; A := *RULPTR
+	BTJZ	%>80,A,CMPLTR2		; A.7 set (']' found)? Skip if not
+	OR	%>08,FLAGS1		; else set FLAGS1.3
+CMPLTR2	AND	%>3F,A			; mask A.6 and A.7
+	CMP	REGA,B			; A == B?
+	JZ	CPMATCH			; jump if yes
+	OR	%>10,FLAGS1		; set FLAGS1.4: pattern match failed
+	MOVD	INRDLX,INRD		; INRD := INRDLX
+	RETS				; return (failed)
 
-LF4FE	BTJZ	%>08,R10,LF50C	; R10.3 set (']' found) ? Jump if not
+CPMATCH	BTJZ	%>08,FLAGS1,CMPNEXT	; FLAGS1.3 set (']' found)? Jump if not
 
 	; pattern match successful
-LF502	MOVD	R3,R15		; R14:15 := R2:3 - save input buffer read ptr
-	AND	%>EF,R10	; clear R10.4: pattern match successful
-	OR	%>02,R11	; set R11.1 - forbid to count chars to free in R55 ?
-	RETS			; return
+CMPEND	MOVD	INRD,INRDP		; INRDP := INRD - save input buffer read ptr
+	AND	%>EF,FLAGS1		; clear FLAGS1.4: pattern match successful
+	OR	%>02,FLAGS2		; set FLAGS2.1 - forbid to count matched chars to discard
+	RETS				; return
 
-LF50C	INC	R21		; inc R20:21
-	JNC	LF4DD
-	INC	R20
-	JMP	LF4DD		; and loop: check next char
+	; next letter
+CMPNEXT	INC	RULPTRL			; inc RULPTR
+	JNC	CMPLTR			;
+	INC	RULPTRH			;
+	JMP	CMPLTR			; and loop: check next char
 
 ;==============================================================================
 
 	; Get letter flags
-GFLAGS	MOV	R22,B
-	CMP	%>3A,B
-	JP	GFLAGX
-	CMP	%>21,B
-	JN	GFLAGX
-	SUB	%>21,B
-	LDA	@LTFLGS(B)	; Letter flags
-	RETS
+GFLAGS	MOV	NXTCHR,B		; B := Next char
+	CMP	%>3A,B			; B > 'Z'-$20?
+	JP	GFLAGX			; exit if yes
+	CMP	%>21,B			; B < 'A'-$20?
+	JN	GFLAGX			; exit if yes
+	SUB	%>21,B			; B -= 'A' (could replace the CMP above!)
+	LDA	@LTFLGS(B)		; Letter flags
+	RETS				; done
 
-GFLAGX	CLR	A
-	RETS
+GFLAGX	CLR	A			; non-letter => clear all flags
+	RETS				; done
 
 	; Letter flags
 	; ------------
@@ -803,394 +913,396 @@ GFLAGX	CLR	A
 	; 2(04): Front vowel
 	; 1(02): Back vowel
 	; 0(01): Suffix ('E')
-LTFLGS	BYTE	>80		; A 1000 0000 - EPROM sig check begin
-	BYTE	>48		; B 0100 1000
-	BYTE	>28		; C 0010 1000
-	BYTE	>58		; D 0101 1000
-	BYTE	>85		; E 1000 0101 - EPROM sig check end
-	BYTE	>08		; F 0000 1000
-	BYTE	>68		; G 0110 1000
-	BYTE	>08		; H 0000 1000
-	BYTE	>84		; I 1000 0100
-	BYTE	>78		; J 0111 1000
-	BYTE	>08		; K 0000 1000
-	BYTE	>58		; L 0101 1000
-	BYTE	>48		; M 0100 1000
-	BYTE	>58		; N 0101 1000
-	BYTE	>82		; O 1000 0010
-	BYTE	>08		; P 0000 1000
-	BYTE	>08		; Q 0000 1000
-	BYTE	>58		; R 0101 1000
-	BYTE	>38		; S 0011 1000
-	BYTE	>18		; T 0001 1000
-	BYTE	>82		; U 1000 0010
-	BYTE	>48		; V 0100 1000
-	BYTE	>48		; W 0100 1000
-	BYTE	>28		; X 0010 1000
-	BYTE	>84		; Y 1000 0100
-	BYTE	>78		; Z 0111 1000
+LTFLGS	BYTE	>80			; A 1000 0000 - EPROM sig check begin
+	BYTE	>48			; B 0100 1000
+	BYTE	>28			; C 0010 1000
+	BYTE	>58			; D 0101 1000
+	BYTE	>85			; E 1000 0101 - EPROM sig check end
+	BYTE	>08			; F 0000 1000
+	BYTE	>68			; G 0110 1000
+	BYTE	>08			; H 0000 1000
+	BYTE	>84			; I 1000 0100
+	BYTE	>78			; J 0111 1000
+	BYTE	>08			; K 0000 1000
+	BYTE	>58			; L 0101 1000
+	BYTE	>48			; M 0100 1000
+	BYTE	>58			; N 0101 1000
+	BYTE	>82			; O 1000 0010
+	BYTE	>08			; P 0000 1000
+	BYTE	>08			; Q 0000 1000
+	BYTE	>58			; R 0101 1000
+	BYTE	>38			; S 0011 1000
+	BYTE	>18			; T 0001 1000
+	BYTE	>82			; U 1000 0010
+	BYTE	>48			; V 0100 1000
+	BYTE	>48			; W 0100 1000
+	BYTE	>28			; X 0010 1000
+	BYTE	>84			; Y 1000 0100
+	BYTE	>78			; Z 0111 1000
 
 ;==============================================================================
 
 	; Pattern jump table
-PATBRT	BR	@PATVOW		; #	09	1+ vowels
-
-	BR	@PATVOC		; .	0A	voiced consonant: B D G J L M N R V W X
-
-	BR	@PATSUF		; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
-
-	BR	@PATSIB		; &	0C	sibilant: S C G Z X J CH SH
-
-	BR	@PATPLU		; @	0D	T S R D L Z N J TH CH SH preceding long U
-
-	BR	@PAT1CO		; ^	0E	1 consonant only
-
-	BR	@PATFVO		; +	0F	front vowel: E I Y
-
-	BR	@PAT0MC		; :	10	0+ consonants
-
-	BR	@PAT1MC		; *	11	1+ consonants
-
-	BR	@PATBVO		; >	12	back vowel: O U
-
-	BR	@PATNLT		; <	13	Anything other than a letter
-
-	BR	@PAT2MV		; ?	14	2+ vowels
+PATBRT	BR	@PATVOW			; #	09	1+ vowels
+	BR	@PATVOC			; .	0A	voiced consonant: B D G J L M N R V W X
+	BR	@PATSUF			; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
+	BR	@PATSIB			; &	0C	sibilant: S C G Z X J CH SH
+	BR	@PATPLU			; @	0D	T S R D L Z N J TH CH SH preceding long U
+	BR	@PAT1CO			; ^	0E	1 consonant only
+	BR	@PATFVO			; +	0F	front vowel: E I Y
+	BR	@PAT0MC			; :	10	0+ consonants
+	BR	@PAT1MC			; *	11	1+ consonants
+	BR	@PATBVO			; >	12	back vowel: O U
+	BR	@PATNLT			; <	13	Anything other than a letter
+	BR	@PAT2MV			; ?	14	2+ vowels
 
 ;==============================================================================
 
 	; Check rule pattern
-CHKPAT	BTJO	%>40,R10,LF572	; R10.6 set (scan direction left) ? jump if yes
-	MOV	%>40,B		; '[' mask
-	INC	R21		; inc R20:21 rule ptr
-	JNC	LF570
-	INC	R20
-LF570	JMP	LF576		; proceed
+CHKPAT	BTJO	%>40,FLAGS1,CKPATL1	; FLAGS1.6 set (scan direction left)? jump if yes
+	MOV	%>40,B			; '[' mask
+	INC	RULPTRL			; inc RULPTR rule ptr
+	JNC	DINC5
+	INC	RULPTRH
+DINC5	JMP	CHKPAT1			; proceed
 
-LF572	MOV	%>80,B		; ']' mask
-	DECD	R21		; dec R20:21 rule ptr
+CKPATL1	MOV	%>80,B			; ']' mask
+	DECD	RULPTR			; dec RULPTR rule ptr
 
 	; check if boundary has been reached
-LF576	LDA	*R21		; get rule char
-	BTJZ	B,A,LF58C	; is '[' or ']' ? jump if not
-	BTJO	%>40,R10,LF582	; R10.6 set (scan direction left) ? jump if yes
-	DECD	R21		; dec R20:21 rule ptr
-	JMP	LF588
+CHKPAT1	LDA	*RULPTR			; get rule char
+	BTJZ	B,A,CKPTCHR		; is '[' or ']'? jump if not
+	BTJO	%>40,FLAGS1,CKPATL2	; FLAGS1.6 set (scan direction left)? jump if yes
+	DECD	RULPTR			; dec RULPTR rule ptr
+	JMP	DINC6
 
-LF582	INC	R21		; inc R20:21 rule ptr
-	JNC	LF588
-	INC	R20
-LF588	AND	%>EF,R10	; clear R10.4 rule pattern match failed
-	RETS			; return
+CKPATL2	INC	RULPTRL			; inc RULPTR rule ptr
+	JNC	DINC6
+	INC	RULPTRH
+DINC6	AND	%>EF,FLAGS1		; clear FLAGS1.4 rule pattern match failed
+	RETS				; return
 
 	; check rule char
-LF58C	CALL	@GNEXT		; get next input char and move code to range 00-3F
-	LDA	*R21		; A := *R20:21 - load rule char
-	CMP	%>15,A		; A < $15 ? (pattern symbol)
-	JN	LF5A4		; jump if yes
-LF595	CMP	R0,R22		; otherwise compare input char with rule char
-	JZ	CHKPAT		; continue with next char if both chars match
+CKPTCHR	CALL	@GNEXT			; get next input char and move code to range 00-3F
+	LDA	*RULPTR			; A := *RULPTR - load rule char
+	CMP	%>15,A			; A < $15? (pattern symbol)
+	JN	CHKSYMB			; jump if yes
+CKNXCHR	CMP	REGA,NXTCHR		; otherwise compare input char with rule char
+	JZ	CHKPAT			; continue with next char if both chars match
 
 	; pattern match failed
-PATFLD	OR	%>10,R10	; set R10.4 - match failed
-	MOVD	R19,R3		; R2:3 := R18:19 - restore input ptr
-	MOVD	R29,R17		; R16:17 := R28:29 - restore backward input ptr
-	RETS			; return (failed)
+PATFLD	OR	%>10,FLAGS1		; set FLAGS1.4 - match failed
+	MOVD	INRDLX,INRD		; INRD := INRDLX - restore input ptr
+	MOVD	INRDLB,INRDB		; INRDB := INRDLB - restore backward input ptr
+	RETS				; return (failed)
 
 	; check rule pattern symbol
-LF5A4	CMP	%>07,A		; is a "'" ?
-	JZ	LF595		; jump if yes
+CHKSYMB	CMP	%>07,A			; is a "'"?
+	JZ	CKNXCHR			; jump if yes (apostrophe not a pattern symbol)
 	; compute pattern symbol handler address
-	MOV	A,B		; B := A
-	SUB	%>09,B		; B -= 9
-	MPY	%>03,B		; B *= 3
-	BR	@PATBRT(B)	; Branch to PATBRT + B
+	MOV	A,B			; B := A
+	SUB	%>09,B			; B -= 9
+	MPY	%>03,B			; B *= 3
+	BR	@PATBRT(B)		; Branch to PATBRT + B
 
+;..............................................................................
 	; <	13	Anything other than a letter
-PATNLT	CALL	@GFLAGS		; Get letter flags
-	CMP	%>00,A		; Is a letter ?
-	JZ	PATOK1		; Accept if yes
-	JMP	PATFLD		; else pattern match failed
+PATNLT	CALL	@GFLAGS			; Get letter flags
+	CMP	%>00,A			; Is a letter?
+	JZ	PATOK1			; Accept if yes
+	JMP	PATFLD			; else pattern match failed
 
+;..............................................................................
 	; *	11	1+ consonants
-PAT1MC	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>08,A,LF5C1	; Is a consonant ? Jump if yes
-	JMP	PATFLD		; else pattern match failed
+PAT1MC	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>08,A,PATL1MC		; Is a consonant? Jump if yes
+	JMP	PATFLD			; else pattern match failed
 
-LF5C1	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>08,A,LF5C1	; Is a consonant ? Loop until not
-	JMP	LF5FB		; Unget and Accept rule
+PATL1MC	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>08,A,PATL1MC		; Is a consonant? Loop until not
+	JMP	PATOK0			; Unget and Accept rule
 
+;..............................................................................
 	; ?	14	2+ vowels
-PAT2MV	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>80,A,LF5D4	; Vowel flag ? Jump if yes
-	JMP	PATFLD		; pattern match failed
+PAT2MV	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>80,A,PAT2MV1		; Vowel flag? Jump if yes
+	JMP	PATFLD			; pattern match failed
 
-LF5D4	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>80,A,LF5DF	; Vowel flag ? Jump if yes
-	JMP	PATFLD		; pattern match failed
+PAT2MV1	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>80,A,PATL2MV		; Vowel flag? Jump if yes
+	JMP	PATFLD			; pattern match failed
 
-LF5DF	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>80,A,LF5DF	; Vowel flag ? Loop until not
-	JMP	LF5FB		; Unget and accept rule
+PATL2MV	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>80,A,PATL2MV		; Vowel flag? Loop until not
+	JMP	PATOK0			; Unget and accept rule
 
+;..............................................................................
 	; :	10	0+ consonants
-PAT0MC	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>08,A,LF5F2	; Consonant ? Jump if yes
-	JMP	LF5FB		; else unget and accept rule
+PAT0MC	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>08,A,PATL0MC		; Consonant? Jump if yes
+	JMP	PATOK0			; else unget and accept rule
 
-LF5F2	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>08,A,LF5F2	; Is a consonant ? Loop until not
+PATL0MC	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>08,A,PATL0MC		; Is a consonant? Loop until not
 
 	; Unget and accept rule
-LF5FB	CALL	@UNGET		; Unget last input character
+PATOK0	CALL	@UNGET			; Unget last input character
 
 	; pattern match ok
-PATOK1	BR	@CHKPAT		; Check next rule pattern
+PATOK1	BR	@CHKPAT			; Check next rule pattern
 
+;..............................................................................
 	; %	0B	suffix: -ER(S) -E -ES -ED -ELY -ING -OR -MENT
-PATSUF	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>01,A,LF657	; Suffix flag ('E') ? Jump if yes
-	CMP	%>29,R22	; 'I' ?
-	JZ	LF63C		; Jump if yes
-	CMP	%>2D,R22	; 'M' ?
-	JZ	LF618		; Jump if yes
-	CMP	%>2F,R22	; 'O' ?
-	JZ	LF633		; jump if yes
-	JMP	PATFL1		; pattern match failed
+PATSUF	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>01,A,PS_E		; Suffix flag ('-E')? Jump if yes
+	CMP	%>29,NXTCHR		; 'I'? (-I*)
+	JZ	PS_I			; Jump if yes
+	CMP	%>2D,NXTCHR		; 'M'? (-M*)
+	JZ	PS_M			; Jump if yes
+	CMP	%>2F,NXTCHR		; 'O'? (-O*)
+	JZ	PS_O			; jump if yes
+	JMP	PATFL1			; pattern match failed
 
-	; found 'M'
-LF618	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>45,A		; 'E' ?
-	JZ	LF621		; jump if yes
-	JMP	PATFL1		; pattern match failed
+	; found '-M'
+PS_M	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>45,A			; 'E'?  (-ME*)
+	JZ	PS_ME			; jump if yes
+	JMP	PATFL1			; pattern match failed
 
-	; found 'ME'
-LF621	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>4E,A		; 'N' ?
-	JZ	LF62A		; jump if yes
-	JMP	PATFL1		; pattern match failed
+	; found '-ME'
+PS_ME	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>4E,A			; 'N'?  (-MEN*)
+	JZ	PS_MEN			; jump if yes
+	JMP	PATFL1			; pattern match failed
 
-	; found 'MEN'
-LF62A	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>54,A		; 'T'
-	JZ	LF64E		; jump if yes, suffix -MENT found
-	JMP	PATFL1		; pattern match failed
+	; found '-MEN'
+PS_MEN	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>54,A			; 'T'? (-MENT)
+	JZ	PATCKSU			; jump if yes, suffix -MENT found
+	JMP	PATFL1			; pattern match failed
 
-	; Found 'O'
-LF633	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>52,A		; 'R' ?
-	JZ	LF64E		; jump if yes, suffix -OR found
-	JMP	PATFL1		; pattern match failed
+	; Found '-O' (-OR)
+PS_O	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>52,A			; 'R'? (-OR)
+	JZ	PATCKSU			; jump if yes, suffix -OR found
+	JMP	PATFL1			; pattern match failed
 
-	; Found 'I'
-LF63C	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>4E,A		; 'N' ?
-	JZ	LF645		; jump if yes
-	JMP	PATFL1		; pattern match failed
+	; Found '-I' (-ING)
+PS_I	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>4E,A			; 'N'? (-IN*)
+	JZ	PS_IN			; jump if yes
+	JMP	PATFL1			; pattern match failed
 
-	; found 'IN'
-LF645	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>47,A		; 'G' ?
-	JZ	LF64E		; jump if yes, suffix -ING found
-	JMP	PATFL1		; pattern match failed
+	; found '-IN'
+PS_IN	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>47,A			; 'G'? (-ING)
+	JZ	PATCKSU			; jump if yes, suffix -ING found
+	JMP	PATFL1			; pattern match failed
 
-	; Suffix found
-LF64E	CALL	@CHKLTR		; Check if next input char is a letter
-	BTJO	%>20,R10,PATFL1	; pattern match failed
-	JMP	PATOK2		; Accept rule
+	; Suffix found: check that no letter follows
+PATCKSU	CALL	@CHKLTR			; Check if next input char is a letter
+	BTJO	%>20,FLAGS1,PATFL1	; pattern match failed
+	JMP	PATOK2			; Accept rule
 
-	; found 'E'
-LF657	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>52,A		; 'R' ?
-	JNZ	LF66A		; jump if not
-	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>53,A		; 'S' ? (optional plural)
-	JZ	LF64E		; jump if yes, suffix -ERS found
-	CALL	@DECR3		; dec R2:3 and roll if needed
-	JMP	LF64E		; suffix -ER found
+	; found '-E' (-ER, -ERS, -ES, -ED, -ELY)
+PS_E	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>52,A			; 'R'? (-ER)
+	JNZ	PS_E1			; jump if not
+	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>53,A			; 'S'? (optional plural -ERS)
+	JZ	PATCKSU			; jump if yes, suffix -ERS found
+	CALL	@DECINRD		; dec INRD and roll if needed
+	JMP	PATCKSU			; suffix -ER found
 
-LF66A	CMP	%>53,A		; 'S'
-	JZ	LF64E		; jump if yes, suffix -ES found
-	CMP	%>44,A		; 'D'
-	JZ	LF64E		; jump if yes, suffix -ED found
-	CMP	%>4C,A		; 'L'
-	JZ	LF682		; jump if yes
-	CALL	@DECR3		; dec R2:3 and roll if needed
-				; suffix -E found
-	CALL	@CHKLTR		; Check if next input char is a letter
-	BTJZ	%>20,R10,PATOK2	; Jump if R10.5 unset (not a letter => OK)
-	JMP	PATFL1		; pattern match failed
+PS_E1	CMP	%>53,A			; 'S' (-ES)
+	JZ	PATCKSU			; jump if yes, suffix -ES found
+	CMP	%>44,A			; 'D' (-ED)
+	JZ	PATCKSU			; jump if yes, suffix -ED found
+	CMP	%>4C,A			; 'L' (-EL*)
+	JZ	PS_EL			; jump if yes
+	CALL	@DECINRD		; dec INRD and roll if needed
+					; suffix -E found
+	CALL	@CHKLTR			; Check if next input char is a letter
+	BTJZ	%>20,FLAGS1,PATOK2	; Jump if FLAGS1.5 unset (not a letter => OK)
+	JMP	PATFL1			; pattern match failed
 
-	; found 'EL'
-LF682	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>59,A		; 'Y' ?
-	JZ	LF64E		; jump if yes, suffix -ELY found
+	; found '-EL'
+PS_EL	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>59,A			; 'Y'? (-ELY)
+	JZ	PATCKSU			; jump if yes, suffix -ELY found
 
 	; pattern match failed
-PATFL1	BR	@PATFLD		; pattern match failed
+PATFL1	BR	@PATFLD			; pattern match failed
 
-	; Test if next input char is a letter, R10.5=1 if yes
-CHKLTR	CALL	@FETCH		; Fetch char and mask high bit
-	PUSH	R21		; save R20:21
-	PUSH	R20
-	CALL	@SELRUL		; select rules set, test if letter rule
-	POP	R20		; restore R20:21
-	POP	R21
-	CALL	@DECR3		; dec R2:3 and roll if needed
-	RETS			; return R10.5=1 if letter
 
+	; Test if next input char is a letter, FLAGS1.5=1 if yes
+CHKLTR	CALL	@FETCH			; Fetch char and mask high bit
+	PUSH	RULPTRL			; save RULPTR
+	PUSH	RULPTRH
+	CALL	@SELRUL			; select rules set, test if letter rule
+	POP	RULPTRH			; restore RULPTR
+	POP	RULPTRL
+	CALL	@DECINRD		; dec INRD and roll if needed
+	RETS				; return FLAGS1.5=1 if letter
+
+;..............................................................................
 	; #	09	1+ vowels
-PATVOW	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>80,A,LF6A6	; Vowel flag ? Jump if yes
-	JMP	PATFL1		; pattern match failed
+PATVOW	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>80,A,PATVOW1		; Vowel flag? Jump if yes
+	JMP	PATFL1			; pattern match failed
 
-LF6A6	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>80,A,LF6A6	; Vowel flag ? Loop until not
-	CALL	@UNGET		; Unget input character
-	JMP	PATOK2		; Accept rule
+PATVOW1	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>80,A,PATVOW1		; Vowel flag? Loop until not
+	CALL	@UNGET			; Unget input character
+	JMP	PATOK2			; Accept rule
 
+;..............................................................................
 	; .	0A	voiced consonant: B D G J L M N R V W X
-PATVOC	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>40,A,PATOK2	; Voiced consonant flag ? Accept if yes
-	JMP	PATFL1		; pattern match failed
+PATVOC	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>40,A,PATOK2		; Voiced consonant flag? Accept if yes
+	JMP	PATFL1			; pattern match failed
 
-PATOK2	BR	@CHKPAT		; Check rule pattern
+PATOK2	BR	@CHKPAT			; Check rule pattern
 
+;..............................................................................
 	; ^	0E	1 consonant only
-PAT1CO	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>08,A,PATOK2	; Consonant flag ? Accept if yes
-	JMP	PATFL1		; pattern match failed
+PAT1CO	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>08,A,PATOK2		; Consonant flag? Accept if yes
+	JMP	PATFL1			; pattern match failed
 
+;..............................................................................
 	; +	0F	front vowel: E I Y
-PATFVO	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>04,A,PATOK2	; Front vowel flag ? Accept if yes
-	JMP	PATFL1		; pattern match failed
+PATFVO	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>04,A,PATOK2		; Front vowel flag? Accept if yes
+	JMP	PATFL1			; pattern match failed
 
+;..............................................................................
 	; >	12	back vowel: O U
-PATBVO	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>02,A,PATOK2	; Back vowel flag ? Accept if yes
-	JMP	PATFL1		; pattern match failed
+PATBVO	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>02,A,PATOK2		; Back vowel flag? Accept if yes
+	JMP	PATFL1			; pattern match failed
 
+;..............................................................................
 	; &	0C	sibilant: S C G Z X J CH SH
-PATSIB	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>20,A,PATOK2	; Sibilant flag ? Accept if yes
-	CALL	@GNEXT		; get next char and move code to range 00-3F
-	JMP	LF6F0
+PATSIB	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>20,A,PATOK2		; Sibilant flag? Accept if yes
+	CALL	@GNEXT			; get next char and move code to range 00-3F
+	JMP	PATCSH			; check for CH or SH
 
+;..............................................................................
 	; @	0D	T S R D L Z N J TH CH SH preceding long U
-PATPLU	CALL	@GFLAGS		; Get letter flags
-	BTJO	%>10,A,PATOK2	; Letter influencing long U flag ? Accept if yes
-				; (Could have checked for 'H' here...)
-	CALL	@GNEXT		; get next char and move code to range 00-3F
-	CMP	%>34,R22	; 'T' ?
-	JZ	LF6FC		; jump if yes
-LF6F0	CMP	%>23,R22	; 'C' ?
-	JZ	LF6FC		; jump if yes
-	CMP	%>33,R22	; 'S' ?
-	JZ	LF6FC		; jump if yes
-	JMP	PATFL1		; pattern match failed
+PATPLU	CALL	@GFLAGS			; Get letter flags
+	BTJO	%>10,A,PATOK2		; Letter influencing long U flag? Accept if yes
+					; (Could have checked for 'H' here...)
+	CALL	@GNEXT			; get next char and move code to range 00-3F
+	CMP	%>34,NXTCHR		; 'T'?
+	JZ	PATTCSH			; jump if yes
+PATCSH	CMP	%>23,NXTCHR		; 'C'?
+	JZ	PATTCSH			; jump if yes
+	CMP	%>33,NXTCHR		; 'S'?
+	JZ	PATTCSH			; jump if yes
+	JMP	PATFL1			; pattern match failed
 
-	; check for TH, SH or SH
-LF6FC	MOVD	R17,R3		; R2:3 := R16:17
-	CALL	@INCR3		; inc R2:3 and roll if needed
-	CALL	@INCR3		; inc R2:3 and roll if needed
-	CALL	@FETCH		; Fetch char and mask high bit
-	CMP	%>48,A		; 'H'
-	JZ	PATOK2		; Accept if yes
-	BR	@PATFLD		; pattern match failed
+	; check for TH, CH or SH
+PATTCSH	MOVD	INRDB,INRD		; INRD := INRDB
+	CALL	@INCINRD		; inc INRD and roll if needed
+	CALL	@INCINRD		; inc INRD and roll if needed
+	CALL	@FETCH			; Fetch char and mask high bit
+	CMP	%>48,A			; 'H'
+	JZ	PATOK2			; Accept if yes
+	BR	@PATFLD			; pattern match failed
 
 ;==============================================================================
 
 	; Fetch char and mask high bit
-FETCH	OR	%>02,R10	; R10.1 = 1 - sel buffer read mode
-	AND	%>FB,R10	; R10.2 = 0 - sel input buffer
-	CALL	@RWBUFR		; read in input buffer
-	AND	%>7F,A		; mask high bit of char
-	RETS			; return
+FETCH	OR	%>02,FLAGS1		; FLAGS1.1 = 1 - sel buffer read mode
+	AND	%>FB,FLAGS1		; FLAGS1.2 = 0 - sel input buffer
+	CALL	@RWBUFR			; read in input buffer (FLAGS1.0 set if delimiter)
+	AND	%>7F,A			; mask high bit of char (delimiter flag)
+	RETS				; return
 
 ;==============================================================================
 
-	; inc R16:17 and roll if needed
-INCR17	INC	R17		; inc R16:17
-	JNC	LF721
-	INC	R16
-LF721	MOVD	R17,R13		; R12:13 := R16:17
-	CALL	@ROLINP		; Roll input buffer R12:13
-	MOVD	R13,R17		; R16:17 := R12:13
+	; inc INRDB and roll if needed
+INCINRB	INC	INRDBL			; inc INRDB
+	JNC	DINC7
+	INC	INRDBH
+DINC7	MOVD	INRDB,BUFPTR		; BUFPTR := INRDB
+	CALL	@ROLINP			; Roll input buffer BUFPTR
+	MOVD	BUFPTR,INRDB		; INRDB := BUFPTR
 	RETS
 
 ;==============================================================================
 
-	; inc R2:3 and roll if needed
-INCR3	INC	R3		; inc R2:3
-	JNC	LF731
-	INC	R2
-LF731	MOVD	R3,R13		; R12:13 := R2:3
-	CALL	@ROLINP		; Roll input buffer R12:13
-	MOVD	R13,R3		; R2:3 := R12:13
+	; inc INRD and roll if needed
+INCINRD	INC	INRDL			; inc INRD
+	JNC	DINC8
+	INC	INRDH
+DINC8	MOVD	INRD,BUFPTR		; BUFPTR := INRD
+	CALL	@ROLINP			; Roll input buffer BUFPTR
+	MOVD	BUFPTR,INRD		; INRD := BUFPTR
 	RETS
 
 ;==============================================================================
 
-	; dec R2:3 and roll if needed
-DECR3	DECD	R3		; dec R2:3
-	CMP	R35,R3		; before input buffer start ?
-	JNZ	LF74A
-	CMP	R34,R2
-	JNZ	LF74A		; jump if not
-	MOVD	R37,R3		; roll to input buffer end
-LF74A	RETS			; return
+	; dec INRD and roll if needed
+DECINRD	DECD	INRD			; dec INRD
+	CMP	INSTA1L,INRDL		; before input buffer start?
+	JNZ	DECIRD1
+	CMP	INSTA1H,INRDH
+	JNZ	DECIRD1			; jump if not
+	MOVD	INEND,INRD		; roll to input buffer end
+DECIRD1	RETS				; return
 
 ;==============================================================================
 
-	; dec R16:17 and roll if needed
-DECR17	DECD	R17		; dec R16:17
-	CMP	R35,R17		; before input buffer start ?
+	; dec INRDB and roll if needed
+DECINRB	DECD	INRDB			; dec INRDB
+	CMP	INSTA1L,INRDBL		; before input buffer start?
 	JNZ	LF75A
-	CMP	R34,R16
-	JNZ	LF75A		; jump if not
-	MOVD	R37,R17		; roll to input buffer end
-LF75A	RETS			; return
+	CMP	INSTA1H,INRDBH
+	JNZ	LF75A			; jump if not
+	MOVD	INEND,INRDB		; roll to input buffer end
+LF75A	RETS				; return
 
 ;==============================================================================
 
 	; get next char and move code to range 00-3F
-GNEXT	BTJZ	%>40,R10,LF766	; R10.6 set ? jump if not
-	PUSH	R3		; else save R2:3
-	PUSH	R2
-	MOVD	R17,R3		; and move R16:17 to R2:3
-LF766	CALL	@FETCH		; Fetch char and mask high bit
-	BTJZ	%>40,R10,LF774	; R10.6 set ? jump if not
-	CALL	@DECR17		; else dec R16:17 and roll if needed
-	POP	R2		; and restore R2:3
-	POP	R3
-LF774	CMP	%>61,A		; lower case ?
-	JN	LF77A		; jump if not
-	SUB	%>20,A		; change to upper case
-LF77A	SUB	%>20,A		; shift to range 00-3F
-	MOV	A,R22		; store in R22
-	RETS			; return
+GNEXT	BTJZ	%>40,FLAGS1,GNEXT1	; FLAGS1.6 set? jump if not (scan right)
+	PUSH	INRDL			; else save INRD
+	PUSH	INRDH			;
+	MOVD	INRDB,INRD		; and move INRDB to INRD (backward read pointer)
+GNEXT1	CALL	@FETCH			; Fetch char and mask high bit
+	BTJZ	%>40,FLAGS1,GNEXT2	; FLAGS1.6 set? jump if not (scan right)
+	CALL	@DECINRB		; else dec INRDB and roll if needed (scan left)
+	POP	INRDH			; and restore INRD
+	POP	INRDL			;
+GNEXT2	CMP	%>61,A			; lower case?
+	JN	GNEXT3			; jump if not
+	SUB	%>20,A			; change to upper case (bug: should be done in FETCH!)
+GNEXT3	SUB	%>20,A			; shift to range 00-3F
+	MOV	A,NXTCHR		; store in NXTCHR
+	RETS				; return
 
 ;==============================================================================
 
 	; Unget last input character
-UNGET	BTJO	%>40,R10,LF787	; R10.6 set ? jump if yes
-	CALL	@DECR3		; dec R2:3 (input buffer read ptr) and roll if needed
+UNGET	BTJO	%>40,FLAGS1,UNGET1	; FLAGS1.6 set? jump if yes
+	CALL	@DECINRD		; dec INRD (input buffer read ptr) and roll if needed
 	RETS
 
-LF787	CALL	@INCR17		; inc R16:17 (backward input buffer read ptr) and roll if needed
+UNGET1	CALL	@INCINRB		; inc INRDB (backward input buffer read ptr) and roll if needed
 	RETS
 
 
 ;==============================================================================
 
-	BYTE	>FF		; boundary
+	BYTE	>FF			; boundary
 
 	; Rules for punctuation
 RLPNCT	BYTE	>CD,>C0,>0A,>47,>B3,>EB,>09,>10
@@ -1516,12 +1628,17 @@ TABRU1	EQU	$-1
 	DATA	CTS256
 
 ;==============================================================================
-PARLINP	EQU	>0200		; Memory-mapped parallel input from Host
-SP0256	EQU	>2000		; Memory-mapped parallel output to SP0256A-AL2
-CTSXRAM	EQU	>3000		; CTS-256A External RAM origin
+PARINP	EQU	>0200			; Memory-mapped parallel input from Host
+SP0256	EQU	>2000			; Memory-mapped parallel output to SP0256A-AL2
+CTSXRAM	EQU	>3000			; CTS-256A External RAM origin
 ;==============================================================================
+
+; addresses within the text-to-speech code in the masked ROM...
+AUDIBLE	EQU	SAYOK			; say "OK" (AUDIBLE)
+GISPEECH EQU	ENCODE			; encode text as allophones ()
+SAVE	EQU	STINPB			; store character in input buffer
+ESCAPE	EQU	CLBUF			; clear buffers and reinitialize
 
 	END	CTS256
 
 ;==============================================================================
-
